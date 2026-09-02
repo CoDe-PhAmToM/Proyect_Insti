@@ -22,6 +22,7 @@ import { rutasCategorias } from './routes/categorias.js';
 import { rutasOrdenes } from './routes/ordenes.js';
 import { rutasIndicadores } from './routes/indicadores.js';
 import { rutasReportes } from './routes/reportes.js';
+import { rutasRecomendaciones } from './routes/recomendaciones.js';
 import { rutasEventos, rutasLineaBase, rutasAdmin } from './routes/medicion.js';
 import { noEncontrado, manejadorErrores } from './middleware/errores.js';
 
@@ -63,6 +64,7 @@ app.use('/api/v1/categorias', rutasCategorias);
 app.use('/api/v1/ordenes', rutasOrdenes);
 app.use('/api/v1/indicadores', rutasIndicadores);
 app.use('/api/v1/reportes', rutasReportes);
+app.use('/api/v1/recomendaciones', rutasRecomendaciones);
 app.use('/api/v1/eventos', rutasEventos);
 app.use('/api/v1/linea-base', rutasLineaBase);
 app.use('/api/v1/admin', rutasAdmin);

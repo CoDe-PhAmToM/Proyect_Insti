@@ -28,7 +28,7 @@ export const NAV_ITEMS = [
   { id: 'ordenes',      label: 'Órdenes',           icon: ClipboardList, grupo: 'produccion',    rol: 'productor', titulo: 'Órdenes de producción', subtitulo: 'Qué se está haciendo'       },
   { id: 'costeo',       label: 'Costeo',            icon: Target,        grupo: 'produccion',    rol: 'productor', titulo: 'Costeo de producción',  subtitulo: 'Cálculo de costos'          },
   { id: 'reportes',     label: 'Reportes',          icon: FileBarChart2, grupo: 'contabilidad',  rol: 'productor', titulo: 'Reportes contables',    subtitulo: 'Plantillas de Contaduría'   },
-  { id: 'ia',           label: 'Recomendaciones',   icon: Sparkles,      grupo: 'inteligencia',  rol: 'productor', titulo: 'Recomendaciones',       subtitulo: 'Inteligencia analítica'     },
+  { id: 'ia',           label: 'Recomendaciones',   icon: Sparkles,      grupo: 'inteligencia',  rol: 'productor', titulo: 'Recomendaciones',       subtitulo: 'Análisis de tus datos'      },
   { id: 'catalogo',     label: 'Catálogo',          icon: ShoppingBag,   grupo: 'tienda',        rol: 'cliente',   titulo: 'Catálogo público',      subtitulo: 'Tienda online'              },
   { id: 'personalizar', label: 'Personalizar',      icon: Zap,           grupo: 'tienda',        rol: 'cliente',   titulo: 'Personalizador',        subtitulo: 'Editor 2D'                  },
 ];

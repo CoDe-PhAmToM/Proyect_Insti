@@ -5,13 +5,14 @@
 // de Registros y el nuevo módulo de Reportes.
 // ============================================================
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, Wallet, Users,
 } from 'lucide-react';
 import { bs, fechaCorta } from 'shared/formato';
 import { useRegistros } from '../context/RegistrosContext';
+import { api } from '../lib/api';
 
 export const Dashboard = () => {
   const {
@@ -212,35 +213,9 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* Panel IA adaptado al usuario */}
-        <div className="bg-stone-950 text-stone-100 p-6 rounded-sm flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={15} className="text-orange-400" />
-            <div className="text-[10px] tracking-[0.25em] uppercase text-orange-400">Recomendación</div>
-          </div>
-          <h3 className="text-base font-black leading-snug mb-3">Tu prenda más rentable esta semana</h3>
-          <div className="text-3xl font-black text-orange-400 mb-1">Polera Negra M</div>
-          <div className="text-xs text-stone-400 mb-auto">18 unidades · Ganancia real Bs. 22.30 c/u</div>
-
-          <div className="space-y-2 pt-4 border-t border-stone-800 mt-4 text-xs">
-            <div className="flex justify-between">
-              <span className="text-stone-400">Te cuesta hacer</span>
-              <span className="font-bold">Bs. 41.50</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-stone-400">La vendés a</span>
-              <span className="font-bold">Bs. 65.00</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-stone-400">Ganás por unidad</span>
-              <span className="font-bold text-green-400">Bs. 23.50</span>
-            </div>
-          </div>
-
-          <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-sm p-3 text-xs text-amber-300">
-            ⚠ Solo te quedan <strong>4 unidades</strong>. Producí más antes del fin de semana.
-          </div>
-        </div>
+        {/* Lo más urgente, tomado del motor de recomendaciones.
+            Antes acá había una prenda inventada con cifras fijas. */}
+        <PanelUrgente />
       </div>
 
       {/* Últimas transacciones — mismos datos que la vista Registros */}
@@ -288,6 +263,58 @@ export const Dashboard = () => {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+};
+
+
+// ── Lo más urgente ───────────────────────────────────────────
+// Toma la recomendación de mayor severidad del motor. Si no hay
+// nada que avisar, lo dice; nunca rellena con una cifra inventada.
+
+const PanelUrgente = () => {
+  const [reco, setReco] = useState(null);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    let vivo = true;
+    api.get('/recomendaciones')
+      .then(d => { if (vivo) setReco(d.recomendaciones[0] ?? null); })
+      .catch(() => {})
+      .finally(() => { if (vivo) setCargando(false); });
+    return () => { vivo = false; };
+  }, []);
+
+  return (
+    <div className="bg-stone-950 text-stone-100 p-6 rounded-sm flex flex-col">
+      <div className="flex items-center gap-2 mb-4">
+        <Sparkles size={15} className="text-orange-400" />
+        <div className="text-[10px] tracking-[0.25em] uppercase text-orange-400">
+          Lo más urgente
+        </div>
+      </div>
+
+      {cargando && <div className="text-sm text-stone-500">Analizando tus datos...</div>}
+
+      {!cargando && !reco && (
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="text-base font-black leading-snug mb-2">Todo en orden por ahora</div>
+          <p className="text-xs text-stone-400 leading-relaxed">
+            No se encontró nada que necesite tu atención con los datos que hay cargados.
+          </p>
+        </div>
+      )}
+
+      {!cargando && reco && (
+        <>
+          <h3 className="text-base font-black leading-snug mb-3">{reco.titulo}</h3>
+          <p className="text-xs text-stone-400 leading-relaxed mb-auto">{reco.mensaje}</p>
+
+          <div className="mt-4 pt-4 border-t border-stone-800 text-[11px] text-stone-500">
+            Mirá el detalle en Recomendaciones, con las cifras que lo originaron.
+          </div>
+        </>
+      )}
     </div>
   );
 };
