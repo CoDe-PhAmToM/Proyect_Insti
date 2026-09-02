@@ -3,8 +3,10 @@
 // ============================================================
 
 import React, { useState, useRef } from 'react';
-import { Upload, RotateCw, Maximize2 } from 'lucide-react';
+import { Upload, RotateCw, Maximize2, ShoppingBag, Check } from 'lucide-react';
 import { CATALOGO, COLORES_TELA, TALLAS_MEDIDAS } from '../data/mockData';
+import { useCart } from '../context/CartContext';
+import { CartModal } from '../components/CartModal';
 
 // ── Catálogo público ─────────────────────────────────────────
 export const Catalogo = ({ setVista }) => {
@@ -84,8 +86,11 @@ export const Personalizador = () => {
   const [estampado,    setEstampado]    = useState(null);
   const [estampadoPos, setEstampadoPos] = useState({ x: 50, y: 45, scale: 1, rotation: 0 });
   const [arrastrando,  setArrastrando]  = useState(false);
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [confirmacionVisible, setConfirmacionVisible] = useState(false);
   const fileInputRef = useRef(null);
   const canvasRef    = useRef(null);
+  const { items, agregarItem } = useCart();
 
   const medidas = TALLAS_MEDIDAS[talla];
   const precioBase = 65;
@@ -111,6 +116,20 @@ export const Personalizador = () => {
     }));
   };
 
+  const handleAgregarCarrito = () => {
+    agregarItem({
+      producto: 'Polera Clásica Urbana',
+      color: colorTela.nombre,
+      colorHex: colorTela.hex,
+      talla,
+      tieneEstampado: !!estampado,
+      estampado,
+      precio: precioTotal,
+    });
+    setConfirmacionVisible(true);
+    setTimeout(() => setConfirmacionVisible(false), 2200);
+  };
+
   return (
     <div
       className="grid grid-cols-12 h-[calc(100vh-0px)] overflow-hidden"
@@ -134,6 +153,17 @@ export const Personalizador = () => {
             </button>
             <button className="bg-white border border-stone-200 px-3 py-1.5 text-xs font-bold rounded-sm hover:bg-stone-50 flex items-center gap-1">
               <Maximize2 size={11} /> AMPLIAR
+            </button>
+            <button
+              onClick={() => setCarritoAbierto(true)}
+              className="bg-white border border-stone-200 px-3 py-1.5 text-xs font-bold rounded-sm hover:bg-stone-50 flex items-center gap-1.5 relative"
+            >
+              <ShoppingBag size={12} /> CARRITO
+              {items.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-stone-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                  {items.length}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -200,7 +230,7 @@ export const Personalizador = () => {
         </div>
       </div>
 
-      {/* ── Panel de controles ───────────────────────────────── */}
+      {/* ── Panel de controles ───────────────────────────── */}
       <div className="col-span-5 bg-white border-l border-stone-200 flex flex-col overflow-y-auto">
 
         <div className="p-6 border-b border-stone-100 shrink-0">
@@ -273,55 +303,104 @@ export const Personalizador = () => {
           <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 font-bold mb-3">03 · Estampado (opcional)</div>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
 
+          {/* Subida / estado del estampado */}
           {!estampado ? (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-stone-300 hover:border-orange-400 rounded-sm p-5 transition-colors text-center"
+              className="w-full border-2 border-dashed border-stone-300 hover:border-orange-400 rounded-sm p-5 transition-colors text-center mb-4"
             >
               <Upload size={20} className="mx-auto mb-2 text-stone-400" />
               <div className="text-sm font-bold mb-0.5">Subí tu diseño o logo</div>
               <div className="text-xs text-stone-400">PNG, JPG o SVG · Máx 5 MB</div>
             </button>
           ) : (
-            <div className="space-y-3">
-              <div className="bg-stone-50 border border-stone-200 p-3 rounded-sm flex items-center gap-3">
-                <img src={estampado} alt="" className="w-10 h-10 object-cover rounded-sm bg-white border border-stone-200" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold">Diseño cargado ✓</div>
-                  <div className="text-[11px] text-stone-500">Arrastralo sobre la polera</div>
-                </div>
-                <button onClick={() => setEstampado(null)} className="text-[10px] font-black text-red-600 hover:text-red-700 shrink-0">
-                  QUITAR
-                </button>
+            <div className="bg-stone-50 border border-stone-200 p-3 rounded-sm flex items-center gap-3 mb-4">
+              <img src={estampado} alt="" className="w-10 h-10 object-cover rounded-sm bg-white border border-stone-200 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold">Diseño cargado ✓</div>
+                <div className="text-[11px] text-stone-500">Arrastralo sobre la polera</div>
               </div>
+              <button onClick={() => setEstampado(null)} className="text-[10px] font-black text-red-600 hover:text-red-700 shrink-0">
+                QUITAR
+              </button>
             </div>
           )}
+
+          {/* Sliders — siempre visibles, deshabilitados sin estampado */}
+          <div className={`space-y-4 ${!estampado ? 'opacity-40 pointer-events-none' : ''}`}>
+            <div>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-stone-600 font-medium">Tamaño</span>
+                <span className="font-black">{Math.round(estampadoPos.scale * 100)}%</span>
+              </div>
+              <input
+                type="range" min="0.4" max="2.2" step="0.05" value={estampadoPos.scale}
+                onChange={e => setEstampadoPos(p => ({ ...p, scale: Number(e.target.value) }))}
+                className="w-full accent-orange-500 cursor-pointer"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-stone-600 font-medium">Rotación</span>
+                <span className="font-black">{estampadoPos.rotation}°</span>
+              </div>
+              <input
+                type="range" min="-180" max="180" value={estampadoPos.rotation}
+                onChange={e => setEstampadoPos(p => ({ ...p, rotation: Number(e.target.value) }))}
+                className="w-full accent-orange-500 cursor-pointer"
+              />
+            </div>
+            {!estampado && (
+              <p className="text-[10px] text-stone-400 text-center">Subí un diseño para activar estos controles</p>
+            )}
+          </div>
         </div>
 
-        {/* Resumen y precio */}
-        <div className="p-6 mt-auto border-t border-stone-100 bg-stone-50">
-          <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 font-bold mb-4">Resumen de tu pedido</div>
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-stone-600">Polera {talla}</span>
-              <span className="font-bold">Bs. {precioBase}</span>
+        {/* Resumen y CTA */}
+        <div className="p-6 bg-stone-950 text-white mt-auto">
+          <div className="text-[10px] tracking-[0.25em] uppercase text-stone-400 mb-3">Resumen del pedido</div>
+          <div className="space-y-2 text-xs mb-4">
+            <div className="flex justify-between">
+              <span className="text-stone-400">Polera base</span>
+              <span>Bs. {precioBase}</span>
             </div>
-            {estampado && (
-              <div className="flex justify-between text-sm">
-                <span className="text-stone-600">+ Estampado</span>
-                <span className="font-bold">Bs. 15</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm border-t border-stone-200 pt-2">
-              <span className="font-black">Total</span>
-              <span className="text-xl font-black text-orange-600">Bs. {precioTotal}</span>
+            <div className="flex justify-between">
+              <span className="text-stone-400">Estampado personalizado</span>
+              <span>{estampado ? 'Bs. 15' : 'Bs. 0 (sin estampado)'}</span>
+            </div>
+            <div className="flex justify-between text-[11px] text-stone-500">
+              <span>Talla {talla} · {colorTela.nombre}</span>
+              <span>{estampado ? 'Con diseño' : 'Color sólido'}</span>
             </div>
           </div>
-          <button className="w-full bg-orange-500 text-stone-950 py-3 font-black rounded-sm hover:bg-orange-400 transition-colors text-sm">
-            COMPRAR AHORA →
+          <div className="border-t border-stone-800 pt-3 mb-4 flex justify-between items-end">
+            <span className="text-xs text-stone-400 uppercase tracking-wider">Total</span>
+            <span className="text-3xl font-black text-orange-400">Bs. {precioTotal}</span>
+          </div>
+          <button
+            onClick={handleAgregarCarrito}
+            className="w-full bg-orange-500 text-stone-950 py-3 font-black text-xs rounded-sm hover:bg-orange-400 tracking-widest relative"
+          >
+            {confirmacionVisible ? (
+              <span className="flex items-center justify-center gap-2">
+                <Check size={14} /> AGREGADO AL CARRITO
+              </span>
+            ) : (
+              'AGREGAR AL CARRITO →'
+            )}
           </button>
+          {confirmacionVisible && (
+            <button
+              onClick={() => setCarritoAbierto(true)}
+              className="w-full mt-2 text-center text-[11px] text-stone-400 hover:text-orange-400 underline"
+            >
+              Ver carrito ({items.length})
+            </button>
+          )}
         </div>
       </div>
+
+      <CartModal open={carritoAbierto} onClose={() => setCarritoAbierto(false)} />
     </div>
   );
 };

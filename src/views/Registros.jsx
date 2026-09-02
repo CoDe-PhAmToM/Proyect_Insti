@@ -1,20 +1,33 @@
 // ============================================================
-// VISTA: Registros de Ingresos y Egresos v2.0
+// VISTA: Registros de Ingresos y Egresos v2.0  ← NUEVA VISTA
+// Corazón del problema: los productores no registran nada.
+// Esta vista es la más importante del sistema.
 // ============================================================
 
 import React, { useState } from 'react';
 import { Plus, AlertTriangle, TrendingUp, TrendingDown, Filter } from 'lucide-react';
-import { REGISTROS } from '../data/mockData';
+import { Modal, FormField, inputClass } from '../components/Modal';
+import { useRegistros } from '../context/RegistrosContext';
+
+const CATEGORIAS = ['Venta prendas', 'Materia prima', 'Servicios', 'Mano de obra', 'Gasto personal', 'Otro'];
+
+const FORM_VACIO = {
+  fecha: '',
+  tipo: 'ingreso',
+  categoria: 'Venta prendas',
+  descripcion: '',
+  monto: '',
+  origen: 'negocio',
+};
 
 export const Registros = () => {
+  const { registros, agregarRegistro, totalIngresos, totalEgresos, totalPersonal, gananciaReal, gananciaSinMezcla } = useRegistros();
   const [filtro, setFiltro] = useState('todos');
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [form, setForm] = useState(FORM_VACIO);
+  const [errores, setErrores] = useState({});
 
-  const totalIngresos = REGISTROS.filter(r => r.tipo === 'ingreso').reduce((a, r) => a + r.monto, 0);
-  const totalEgresos  = REGISTROS.filter(r => r.tipo === 'egreso').reduce((a, r) => a + r.monto, 0);
-  const totalPersonal = REGISTROS.filter(r => r.origen === 'personal').reduce((a, r) => a + r.monto, 0);
-  const gananciaReal  = totalIngresos - totalEgresos;
-
-  const registrosFiltrados = REGISTROS.filter(r => {
+  const registrosFiltrados = registros.filter(r => {
     if (filtro === 'todos')    return true;
     if (filtro === 'ingresos') return r.tipo === 'ingreso';
     if (filtro === 'egresos')  return r.tipo === 'egreso';
@@ -22,10 +35,43 @@ export const Registros = () => {
     return true;
   });
 
+  const hoy = () => {
+    const d = new Date();
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  };
+
+  const abrirModal = () => {
+    setForm({ ...FORM_VACIO, fecha: hoy() });
+    setErrores({});
+    setModalAbierto(true);
+  };
+
+  const validar = () => {
+    const errs = {};
+    if (!form.descripcion.trim()) errs.descripcion = 'Escribí una descripción';
+    if (!form.monto || Number(form.monto) <= 0) errs.monto = 'El monto tiene que ser mayor a 0';
+    if (!form.fecha) errs.fecha = 'Elegí una fecha';
+    setErrores(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const guardarRegistro = () => {
+    if (!validar()) return;
+    agregarRegistro({
+      fecha: form.fecha,
+      tipo: form.tipo,
+      categoria: form.categoria,
+      descripcion: form.descripcion.trim(),
+      monto: Number(form.monto),
+      origen: form.origen,
+    });
+    setModalAbierto(false);
+  };
+
   return (
     <div className="p-8 space-y-6">
 
-      {/* Advertencia gastos mezclados */}
+      {/* Advertencia gastos mezclados — refleja ítem 6 de la encuesta */}
       {totalPersonal > 0 && (
         <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-sm">
           <div className="flex items-start gap-3">
@@ -51,7 +97,7 @@ export const Registros = () => {
             <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500">Total ingresos</div>
           </div>
           <div className="text-3xl font-black text-green-700">Bs. {totalIngresos.toFixed(2)}</div>
-          <div className="text-xs text-stone-500 mt-1">{REGISTROS.filter(r=>r.tipo==='ingreso').length} registros</div>
+          <div className="text-xs text-stone-500 mt-1">{registros.filter(r=>r.tipo==='ingreso').length} registros</div>
         </div>
 
         <div className="bg-white border border-stone-200 p-5 rounded-sm">
@@ -71,7 +117,7 @@ export const Registros = () => {
             Bs. {gananciaReal.toFixed(2)}
           </div>
           <div className="text-xs text-stone-600 mt-1">
-            Sin gastos personales: <strong className="text-green-800">Bs. {(gananciaReal + totalPersonal).toFixed(2)}</strong>
+            Sin gastos personales: <strong className="text-green-800">Bs. {gananciaSinMezcla.toFixed(2)}</strong>
           </div>
         </div>
       </div>
@@ -104,7 +150,10 @@ export const Registros = () => {
                 {f.label}
               </button>
             ))}
-            <button className="flex items-center gap-1.5 bg-orange-500 text-stone-950 px-4 py-1.5 text-xs font-black rounded-sm hover:bg-orange-400 ml-2">
+            <button
+              onClick={abrirModal}
+              className="flex items-center gap-1.5 bg-orange-500 text-stone-950 px-4 py-1.5 text-xs font-black rounded-sm hover:bg-orange-400 ml-2"
+            >
               <Plus size={13} /> NUEVO REGISTRO
             </button>
           </div>
@@ -179,6 +228,140 @@ export const Registros = () => {
           </tfoot>
         </table>
       </div>
+
+      {/* Modal: nuevo registro */}
+      <Modal
+        open={modalAbierto}
+        onClose={() => setModalAbierto(false)}
+        title="Nuevo registro"
+        subtitulo="Ingreso o egreso"
+      >
+        <div className="space-y-4">
+          {/* Tipo: ingreso / egreso */}
+          <FormField label="Tipo de movimiento">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, tipo: 'ingreso' }))}
+                className={`py-2.5 rounded-sm text-sm font-bold border-2 transition-colors ${
+                  form.tipo === 'ingreso'
+                    ? 'bg-green-100 border-green-500 text-green-800'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                + Ingreso
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, tipo: 'egreso' }))}
+                className={`py-2.5 rounded-sm text-sm font-bold border-2 transition-colors ${
+                  form.tipo === 'egreso'
+                    ? 'bg-red-100 border-red-500 text-red-800'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                − Egreso
+              </button>
+            </div>
+          </FormField>
+
+          {/* Fecha */}
+          <FormField label="Fecha">
+            <input
+              type="text"
+              placeholder="DD/MM/AAAA"
+              value={form.fecha}
+              onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
+              className={inputClass}
+            />
+            {errores.fecha && <p className="text-xs text-red-600 mt-1">{errores.fecha}</p>}
+          </FormField>
+
+          {/* Categoría */}
+          <FormField label="Categoría">
+            <select
+              value={form.categoria}
+              onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
+              className={inputClass}
+            >
+              {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </FormField>
+
+          {/* Descripción */}
+          <FormField label="Descripción">
+            <input
+              type="text"
+              placeholder="Ej: Venta de 2 poleras negras talla M"
+              value={form.descripcion}
+              onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
+              className={inputClass}
+            />
+            {errores.descripcion && <p className="text-xs text-red-600 mt-1">{errores.descripcion}</p>}
+          </FormField>
+
+          {/* Monto */}
+          <FormField label="Monto (Bs.)">
+            <input
+              type="number"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              value={form.monto}
+              onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+              className={inputClass}
+            />
+            {errores.monto && <p className="text-xs text-red-600 mt-1">{errores.monto}</p>}
+          </FormField>
+
+          {/* Origen — el punto clave del proyecto */}
+          <FormField label="¿De dónde sale o a dónde va esta plata?">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, origen: 'negocio' }))}
+                className={`py-2.5 rounded-sm text-sm font-bold border-2 transition-colors ${
+                  form.origen === 'negocio'
+                    ? 'bg-blue-100 border-blue-500 text-blue-800'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                Del negocio
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, origen: 'personal' }))}
+                className={`py-2.5 rounded-sm text-sm font-bold border-2 transition-colors ${
+                  form.origen === 'personal'
+                    ? 'bg-amber-100 border-amber-500 text-amber-800'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                Personal
+              </button>
+            </div>
+            <p className="text-[11px] text-stone-500 mt-1.5">
+              Marcá "Personal" si esta plata en realidad no es del taller, para que no se mezcle en tu ganancia real.
+            </p>
+          </FormField>
+
+          {/* Acciones */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={() => setModalAbierto(false)}
+              className="flex-1 py-2.5 rounded-sm text-sm font-bold border border-stone-300 text-stone-600 hover:bg-stone-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={guardarRegistro}
+              className="flex-1 py-2.5 rounded-sm text-sm font-black bg-orange-500 text-stone-950 hover:bg-orange-400"
+            >
+              Guardar registro
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

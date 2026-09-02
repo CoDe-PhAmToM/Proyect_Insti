@@ -12,7 +12,17 @@ export const USUARIO = {
   online: true, // simula estado de conexión
 };
 
-// ── KPIs del dashboard ──────────────────────────────────────
+export const USUARIO_CLIENTE = {
+  nombre: 'Juan Quispe',
+  rol: 'Cliente',
+  distrito: 'El Alto',
+  online: true,
+};
+
+// ── KPIs (legado) ────────────────────────────────────────────
+// Ya no se usa: el Dashboard calcula estos valores en vivo desde
+// RegistrosContext. Se deja acá por si algún reporte futuro
+// necesita valores de referencia fijos para comparar.
 export const KPIS = [
   { label: 'Ingresos del mes',    value: 'Bs. 4,820', change: '+8.2%',   up: true  },
   { label: 'Egresos del mes',     value: 'Bs. 3,105', change: '+3.1%',   up: false },
@@ -58,8 +68,7 @@ export const MATERIALES = [
   { codigo: 'CRR-001', nombre: 'Cierre YKK 60cm',      cat: 'Insumo', unidad: 'unidad', precio: 8.50,  stock: 67,  min: 40,  estado: 'ok'      },
 ];
 
-// ── BOM / Receta de producción ───────────────────────────────
-// Polera Clásica — ejemplo central del costeo
+// ── BOM / Receta de producción (legado, se mantiene por compatibilidad) ──
 export const RECETA_POLERA = [
   { material: 'Algodón peinado 30/1', cantidad: 1.4, unidad: 'm',    costo: 28.50, subtotal: 39.90 },
   { material: 'Hilo poliéster Coats', cantidad: 0.05,unidad: 'cono', costo: 12.00, subtotal: 0.60  },
@@ -67,6 +76,49 @@ export const RECETA_POLERA = [
 ];
 export const MANO_OBRA   = 8.50;  // Bs. por prenda
 export const CIF_UNITARIO = 3.20; // Costos indirectos prorrateados (luz, agua, alquiler)
+
+// ── Productos con BOM (Bill of Materials) ────────────────────
+// El bom referencia el `codigo` de MATERIALES, no un texto fijo.
+// Así el costeo siempre queda ligado al inventario real.
+export const PRODUCTOS = [
+  {
+    id: 1,
+    sku: 'POL-CLA-001',
+    nombre: 'Polera Clásica Urbana',
+    bom: [
+      { materialCodigo: 'TLA-001', cantidad: 1.4  },
+      { materialCodigo: 'HIL-001', cantidad: 0.05 },
+      { materialCodigo: 'ETQ-001', cantidad: 1    },
+    ],
+    manoObra: 8.50,
+    cif: 3.20,
+  },
+  {
+    id: 2,
+    sku: 'CHA-AND-001',
+    nombre: 'Chamarra Modelo Andes',
+    bom: [
+      { materialCodigo: 'TLA-003', cantidad: 2.2  },
+      { materialCodigo: 'CRR-001', cantidad: 1    },
+      { materialCodigo: 'HIL-001', cantidad: 0.15 },
+      { materialCodigo: 'ETQ-001', cantidad: 1    },
+    ],
+    manoObra: 22.00,
+    cif: 6.50,
+  },
+  {
+    id: 3,
+    sku: 'POL-DEP-001',
+    nombre: 'Polo Deportivo',
+    bom: [
+      { materialCodigo: 'TLA-002', cantidad: 1.2  },
+      { materialCodigo: 'HIL-002', cantidad: 0.03 },
+      { materialCodigo: 'ETQ-001', cantidad: 1    },
+    ],
+    manoObra: 7.00,
+    cif: 2.80,
+  },
+];
 
 // ── Catálogo de productos ────────────────────────────────────
 export const CATALOGO = [

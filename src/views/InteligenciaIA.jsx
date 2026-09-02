@@ -1,5 +1,7 @@
 // ============================================================
 // VISTA: Recomendaciones IA v2.0
+// Lenguaje simple y directo, adaptado al productor no técnico
+// del Distrito 6 de El Alto
 // ============================================================
 
 import React from 'react';

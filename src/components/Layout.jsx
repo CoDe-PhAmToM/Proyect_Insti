@@ -1,33 +1,15 @@
 // ============================================================
-// COMPONENTES COMPARTIDOS v2.0
-// Sidebar + TopBar
+// COMPONENTES COMPARTIDOS v2.2
+// Sidebar (con separación real de roles) + TopBar
 // ============================================================
 
 import React from 'react';
-import {
-  Activity, Layers, Target, Sparkles,
-  ShoppingBag, Zap, BookOpen, ChevronRight,
-  Search, Bell, Wifi, WifiOff,
-} from 'lucide-react';
+import { ChevronRight, Search, Bell, Wifi, WifiOff } from 'lucide-react';
+import { ROLES, GRUPOS, itemsPorRol } from '../data/navigation';
 
 // ── Sidebar ──────────────────────────────────────────────────
-export const Sidebar = ({ vista, setVista, usuario }) => {
-  const items = [
-    { id: 'dashboard',  label: 'Panel general',   icon: Activity,    grupo: 'principal' },
-    { id: 'registros',  label: 'Ingresos/Egresos', icon: BookOpen,   grupo: 'principal' },
-    { id: 'materiales', label: 'Materiales',       icon: Layers,     grupo: 'produccion'},
-    { id: 'costeo',     label: 'Costeo',           icon: Target,     grupo: 'produccion'},
-    { id: 'ia',         label: 'Recomendaciones',  icon: Sparkles,   grupo: 'inteligencia'},
-    { id: 'catalogo',   label: 'Catálogo',         icon: ShoppingBag,grupo: 'cliente'   },
-    { id: 'personalizar',label:'Personalizar',     icon: Zap,        grupo: 'cliente'   },
-  ];
-
-  const grupos = [
-    { key: 'principal',    label: 'Principal'    },
-    { key: 'produccion',   label: 'Producción'   },
-    { key: 'inteligencia', label: 'Inteligencia' },
-    { key: 'cliente',      label: 'Vista Cliente'},
-  ];
+export const Sidebar = ({ vista, setVista, usuario, rol, setRol }) => {
+  const items = itemsPorRol(rol);
 
   return (
     <aside className="w-64 bg-stone-950 text-stone-100 flex flex-col border-r border-stone-800 shrink-0">
@@ -44,22 +26,51 @@ export const Sidebar = ({ vista, setVista, usuario }) => {
         </div>
       </div>
 
-      {/* Indicador online/offline */}
-      <div className={`mx-4 mt-3 px-3 py-1.5 rounded-sm flex items-center gap-2 text-[10px] font-bold tracking-wider ${
-        usuario.online
-          ? 'bg-green-950 text-green-400 border border-green-800'
-          : 'bg-red-950 text-red-400 border border-red-800'
-      }`}>
-        {usuario.online
-          ? <><Wifi size={10} /> EN LÍNEA</>
-          : <><WifiOff size={10} /> SIN CONEXIÓN · MODO LOCAL</>
-        }
+      {/* Switch de rol — simula dos accesos separados (productor / cliente).
+          En el sistema real esto sería dos logins distintos, no un botón. */}
+      <div className="px-4 pt-4">
+        <div className="text-[9px] font-bold tracking-[0.25em] uppercase text-stone-600 mb-1.5">
+          Vista activa
+        </div>
+        <div className="grid grid-cols-2 gap-1 bg-stone-900 rounded-sm p-1">
+          {Object.values(ROLES).map(r => (
+            <button
+              key={r.id}
+              onClick={() => setRol(r.id)}
+              className={`py-2 rounded-sm text-xs font-bold transition-colors ${
+                rol === r.id
+                  ? 'bg-orange-500 text-stone-950'
+                  : 'text-stone-400 hover:text-stone-200'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <div className="text-[10px] text-stone-600 mt-1.5 leading-snug">
+          {ROLES[rol].descripcion}
+        </div>
       </div>
 
-      {/* Navegación agrupada */}
+      {/* Indicador online/offline — solo aplica al lado productor */}
+      {rol === 'productor' && (
+        <div className={`mx-4 mt-3 px-3 py-1.5 rounded-sm flex items-center gap-2 text-[10px] font-bold tracking-wider ${
+          usuario.online
+            ? 'bg-green-950 text-green-400 border border-green-800'
+            : 'bg-red-950 text-red-400 border border-red-800'
+        }`}>
+          {usuario.online
+            ? <><Wifi size={10} /> EN LÍNEA</>
+            : <><WifiOff size={10} /> SIN CONEXIÓN · MODO LOCAL</>
+          }
+        </div>
+      )}
+
+      {/* Navegación agrupada — solo ítems del rol activo */}
       <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
-        {grupos.map(grupo => {
+        {GRUPOS.map(grupo => {
           const itemsGrupo = items.filter(i => i.grupo === grupo.key);
+          if (itemsGrupo.length === 0) return null;
           return (
             <div key={grupo.key}>
               <div className="text-[9px] font-bold tracking-[0.25em] uppercase text-stone-600 px-3 mb-1">
@@ -91,10 +102,12 @@ export const Sidebar = ({ vista, setVista, usuario }) => {
         })}
       </nav>
 
-      {/* Usuario */}
+      {/* Usuario — cambia según el rol activo */}
       <div className="p-4 border-t border-stone-800">
         <div className="bg-stone-900 rounded-sm p-3">
-          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Sesión activa</div>
+          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">
+            {rol === 'productor' ? 'Sesión activa' : 'Comprando como'}
+          </div>
           <div className="text-sm font-bold truncate">{usuario.nombre}</div>
           <div className="text-xs text-stone-400 truncate">{usuario.distrito}</div>
         </div>
