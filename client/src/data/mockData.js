@@ -1,36 +1,27 @@
 // ============================================================
-// MOCK DATA v2.0
-// Plataforma de Gestión Financiera para la Rentabilidad
-// Microempresas de Confección · Distrito 6, El Alto
+// DATOS PENDIENTES DE CONECTAR
+//
+// Este archivo se está vaciando a propósito. Todo lo que estaba
+// acá (usuarios, materiales, productos, registros, KPIs) ahora
+// viene del servidor.
+//
+// Lo que queda son las tres islas que todavía no tienen backend,
+// cada una con el sprint en que se conecta. Mientras estén acá,
+// la pantalla que las use tiene que decir que son datos de
+// ejemplo: el sistema no puede afirmar nada que no pueda respaldar
+// con filas de la base.
+//
+// PENDIENTE Sprint 4 → VENTAS_SEMANA
+// PENDIENTE Sprint 5 → RECOMENDACIONES_IA
+// PENDIENTE Sprint 6 → CATALOGO
+//
+// COLORES_TELA y TALLAS_MEDIDAS no son datos de ejemplo: son
+// opciones fijas del personalizador y se quedan.
 // ============================================================
 
-export const USUARIO = {
-  nombre: 'María Mamani',
-  rol: 'Productora',
-  taller: 'Taller Mamani',
-  distrito: 'Distrito 6 · El Alto',
-  online: true, // simula estado de conexión
-};
-
-export const USUARIO_CLIENTE = {
-  nombre: 'Juan Quispe',
-  rol: 'Cliente',
-  distrito: 'El Alto',
-  online: true,
-};
-
-// ── KPIs (legado) ────────────────────────────────────────────
-// Ya no se usa: el Dashboard calcula estos valores en vivo desde
-// RegistrosContext. Se deja acá por si algún reporte futuro
-// necesita valores de referencia fijos para comparar.
-export const KPIS = [
-  { label: 'Ingresos del mes',    value: 'Bs. 4,820', change: '+8.2%',   up: true  },
-  { label: 'Egresos del mes',     value: 'Bs. 3,105', change: '+3.1%',   up: false },
-  { label: 'Ganancia real',       value: 'Bs. 1,715', change: '+18.4%',  up: true  },
-  { label: 'Gastos mezclados',    value: 'Bs. 320',   change: '⚠ Atención', up: false },
-];
-
-// ── Ventas semanales ─────────────────────────────────────────
+// ── PENDIENTE Sprint 4 ───────────────────────────────────────
+// El panel ya calcula sus indicadores desde la base; este gráfico
+// no. Se reemplaza por la serie real de ventas por día.
 export const VENTAS_SEMANA = [
   { dia: 'Lun', ingreso: 480,  egreso: 310 },
   { dia: 'Mar', ingreso: 720,  egreso: 420 },
@@ -41,138 +32,62 @@ export const VENTAS_SEMANA = [
   { dia: 'Dom', ingreso: 340,  egreso: 200 },
 ];
 
-// ── Registros de ingresos y egresos ─────────────────────────
-// Refleja la realidad: mezcla de gastos personales/negocio
-export const REGISTROS = [
-  { id: 1,  fecha: '02/06/2026', tipo: 'ingreso', categoria: 'Venta prendas',       descripcion: 'Venta 3 poleras negras talla M',          monto: 195,  origen: 'negocio'   },
-  { id: 2,  fecha: '02/06/2026', tipo: 'egreso',  categoria: 'Materia prima',        descripcion: 'Compra 5m tela algodón peinado',           monto: 142,  origen: 'negocio'   },
-  { id: 3,  fecha: '02/06/2026', tipo: 'egreso',  categoria: 'Gasto personal',       descripcion: 'Mercado familiar (mezclado del negocio)',   monto: 85,   origen: 'personal'  },
-  { id: 4,  fecha: '01/06/2026', tipo: 'ingreso', categoria: 'Venta prendas',        descripcion: 'Pedido corporativo 10 polos',              monto: 750,  origen: 'negocio'   },
-  { id: 5,  fecha: '01/06/2026', tipo: 'egreso',  categoria: 'Servicios',            descripcion: 'Factura luz del taller - mayo',            monto: 68,   origen: 'negocio'   },
-  { id: 6,  fecha: '01/06/2026', tipo: 'egreso',  categoria: 'Gasto personal',       descripcion: 'Transporte escolar hijo (caja del negocio)',monto: 40,   origen: 'personal'  },
-  { id: 7,  fecha: '31/05/2026', tipo: 'ingreso', categoria: 'Venta prendas',        descripcion: 'Venta 2 chamarras modelo andes',           monto: 440,  origen: 'negocio'   },
-  { id: 8,  fecha: '31/05/2026', tipo: 'egreso',  categoria: 'Mano de obra',         descripcion: 'Pago ayudante costura - semana',           monto: 200,  origen: 'negocio'   },
-  { id: 9,  fecha: '30/05/2026', tipo: 'egreso',  categoria: 'Materia prima',        descripcion: 'Hilos, botones y cierres varios',          monto: 95,   origen: 'negocio'   },
-  { id: 10, fecha: '30/05/2026', tipo: 'ingreso', categoria: 'Venta prendas',        descripcion: 'Venta 5 poleras manga larga',              monto: 425,  origen: 'negocio'   },
-];
-
-// ── Materiales e insumos ─────────────────────────────────────
-export const MATERIALES = [
-  { codigo: 'TLA-001', nombre: 'Algodón peinado 30/1', cat: 'Tela',   unidad: 'metro',  precio: 28.50, stock: 145, min: 50,  estado: 'ok'      },
-  { codigo: 'TLA-002', nombre: 'Polialgodón Piqué',    cat: 'Tela',   unidad: 'metro',  precio: 22.00, stock: 38,  min: 50,  estado: 'bajo'    },
-  { codigo: 'TLA-003', nombre: 'Polar antipilling',    cat: 'Tela',   unidad: 'metro',  precio: 35.00, stock: 62,  min: 30,  estado: 'ok'      },
-  { codigo: 'HIL-001', nombre: 'Hilo poliéster Coats', cat: 'Hilo',   unidad: 'cono',   precio: 12.00, stock: 87,  min: 30,  estado: 'ok'      },
-  { codigo: 'HIL-002', nombre: 'Hilo elástico blanco', cat: 'Hilo',   unidad: 'rollo',  precio: 8.50,  stock: 14,  min: 20,  estado: 'critico' },
-  { codigo: 'ETQ-001', nombre: 'Etiqueta tejida marca',cat: 'Insumo', unidad: 'unidad', precio: 0.85,  stock: 1240,min: 500, estado: 'ok'      },
-  { codigo: 'BTN-003', nombre: 'Botón metal 18mm',     cat: 'Insumo', unidad: 'unidad', precio: 1.20,  stock: 22,  min: 100, estado: 'critico' },
-  { codigo: 'CRR-001', nombre: 'Cierre YKK 60cm',      cat: 'Insumo', unidad: 'unidad', precio: 8.50,  stock: 67,  min: 40,  estado: 'ok'      },
-];
-
-// ── BOM / Receta de producción (legado, se mantiene por compatibilidad) ──
-export const RECETA_POLERA = [
-  { material: 'Algodón peinado 30/1', cantidad: 1.4, unidad: 'm',    costo: 28.50, subtotal: 39.90 },
-  { material: 'Hilo poliéster Coats', cantidad: 0.05,unidad: 'cono', costo: 12.00, subtotal: 0.60  },
-  { material: 'Etiqueta tejida marca',cantidad: 1,   unidad: 'u',    costo: 0.85,  subtotal: 0.85  },
-];
-export const MANO_OBRA   = 8.50;  // Bs. por prenda
-export const CIF_UNITARIO = 3.20; // Costos indirectos prorrateados (luz, agua, alquiler)
-
-// ── Productos con BOM (Bill of Materials) ────────────────────
-// El bom referencia el `codigo` de MATERIALES, no un texto fijo.
-// Así el costeo siempre queda ligado al inventario real.
-export const PRODUCTOS = [
-  {
-    id: 1,
-    sku: 'POL-CLA-001',
-    nombre: 'Polera Clásica Urbana',
-    bom: [
-      { materialCodigo: 'TLA-001', cantidad: 1.4  },
-      { materialCodigo: 'HIL-001', cantidad: 0.05 },
-      { materialCodigo: 'ETQ-001', cantidad: 1    },
-    ],
-    manoObra: 8.50,
-    cif: 3.20,
-  },
-  {
-    id: 2,
-    sku: 'CHA-AND-001',
-    nombre: 'Chamarra Modelo Andes',
-    bom: [
-      { materialCodigo: 'TLA-003', cantidad: 2.2  },
-      { materialCodigo: 'CRR-001', cantidad: 1    },
-      { materialCodigo: 'HIL-001', cantidad: 0.15 },
-      { materialCodigo: 'ETQ-001', cantidad: 1    },
-    ],
-    manoObra: 22.00,
-    cif: 6.50,
-  },
-  {
-    id: 3,
-    sku: 'POL-DEP-001',
-    nombre: 'Polo Deportivo',
-    bom: [
-      { materialCodigo: 'TLA-002', cantidad: 1.2  },
-      { materialCodigo: 'HIL-002', cantidad: 0.03 },
-      { materialCodigo: 'ETQ-001', cantidad: 1    },
-    ],
-    manoObra: 7.00,
-    cif: 2.80,
-  },
-];
-
-// ── Catálogo de productos ────────────────────────────────────
-export const CATALOGO = [
-  { id: 1, nombre: 'Polera Clásica Urbana',   precio: 65,  emoji: '👕', categoria: 'Poleras',    descripcion: 'Algodón peinado, varios colores' },
-  { id: 2, nombre: 'Buzo con Capucha',        precio: 145, emoji: '🧥', categoria: 'Buzos',      descripcion: 'Polar antipilling, interior suave' },
-  { id: 3, nombre: 'Chamarra Modelo Andes',   precio: 220, emoji: '🧥', categoria: 'Chamarras',  descripcion: 'Cierre YKK, ideal para el frío alteño' },
-  { id: 4, nombre: 'Polera Manga Larga',      precio: 85,  emoji: '👕', categoria: 'Poleras',    descripcion: 'Algodón peinado reforzado en codos' },
-  { id: 5, nombre: 'Polo Deportivo',          precio: 75,  emoji: '👕', categoria: 'Deportivo',  descripcion: 'Polialgodón piqué, transpirable' },
-  { id: 6, nombre: 'Casaca Bomber',           precio: 180, emoji: '🧥', categoria: 'Chamarras',  descripcion: 'Elástico en puños y cintura' },
-];
-
-// ── Recomendaciones IA ───────────────────────────────────────
-// Lenguaje simple, adaptado al perfil del usuario (no técnico)
+// ── PENDIENTE Sprint 5 ───────────────────────────────────────
+// Texto fijo. El motor real calcula estas recomendaciones sobre
+// los datos del taller y guarda las cifras que las originaron.
 export const RECOMENDACIONES_IA = [
   {
     tipo: 'oportunidad',
     titulo: 'Producí más Polera Negra Talla M',
-    desc: 'Vendiste 18 unidades en 7 días y solo te quedan 4. Si no producís más esta semana, vas a perder ventas. El sistema recomienda hacer 25 unidades.',
+    desc: 'Vendiste 18 unidades en 7 días y solo te quedan 4. Si no producís más esta semana, vas a perder ventas.',
     accion: 'Registrar orden de producción',
     urgencia: 'alta',
   },
   {
     tipo: 'precio',
     titulo: 'Tu Chamarra Andes está muy barata',
-    desc: 'Te cuesta Bs. 168 hacerla y la vendés a Bs. 220. Tu ganancia real es solo Bs. 52 (23%). Otros talleres de El Alto la venden entre Bs. 240 y Bs. 260. Podés subir el precio.',
+    desc: 'Te cuesta Bs. 168 hacerla y la vendés a Bs. 220. Tu ganancia real es solo Bs. 52 (23 %).',
     accion: 'Ver simulación de precio',
     urgencia: 'media',
   },
   {
     tipo: 'alerta',
     titulo: 'El Polo Deportivo Azul no se vende',
-    desc: 'Hace 47 días que no vendés ninguno. Tenés 23 unidades guardadas que representan Bs. 1,840 de tu dinero inmovilizado. Hacé una promoción o bajá el precio temporalmente.',
+    desc: 'Hace 47 días que no vendés ninguno. Tenés 23 unidades guardadas que representan Bs. 1.840 inmovilizados.',
     accion: 'Crear promoción',
     urgencia: 'alta',
   },
   {
     tipo: 'forecast',
     titulo: 'Se viene el invierno: producí chamarras ahora',
-    desc: 'Cada año en junio-julio tus ventas de chamarras suben 3 veces. Si empezás a producir ahora, vas a tener stock cuando más se necesita. El año pasado te quedaste sin stock en julio.',
+    desc: 'Cada año en junio y julio tus ventas de chamarras suben tres veces.',
     accion: 'Ver pronóstico de demanda',
     urgencia: 'media',
   },
 ];
 
-// ── Personalizador ───────────────────────────────────────────
+// ── PENDIENTE Sprint 6 ───────────────────────────────────────
+// La tienda pasa a leer los productos marcados como publicados.
+export const CATALOGO = [
+  { id: 1, nombre: 'Polera Clásica Urbana', precio: 65,  emoji: '👕', categoria: 'Poleras',   descripcion: 'Algodón peinado, varios colores' },
+  { id: 2, nombre: 'Buzo con Capucha',      precio: 145, emoji: '🧥', categoria: 'Buzos',     descripcion: 'Polar antipilling, interior suave' },
+  { id: 3, nombre: 'Chamarra Modelo Andes', precio: 220, emoji: '🧥', categoria: 'Chamarras', descripcion: 'Cierre YKK, ideal para el frío alteño' },
+  { id: 4, nombre: 'Polera Manga Larga',    precio: 85,  emoji: '👕', categoria: 'Poleras',   descripcion: 'Algodón peinado reforzado en codos' },
+  { id: 5, nombre: 'Polo Deportivo',        precio: 75,  emoji: '👕', categoria: 'Deportivo', descripcion: 'Polialgodón piqué, transpirable' },
+  { id: 6, nombre: 'Casaca Bomber',         precio: 180, emoji: '🧥', categoria: 'Chamarras', descripcion: 'Elástico en puños y cintura' },
+];
+
+// ── Opciones del personalizador (no son datos de ejemplo) ────
+
 export const COLORES_TELA = [
-  { nombre: 'Negro',       hex: '#1a1a1a' },
-  { nombre: 'Blanco',      hex: '#f5f5f0' },
-  { nombre: 'Tierra',      hex: '#8b4513' },
-  { nombre: 'Oliva',       hex: '#556b2f' },
-  { nombre: 'Vino',        hex: '#722f37' },
-  { nombre: 'Mostaza',     hex: '#d4a017' },
-  { nombre: 'Azul Profundo',hex: '#1e3a5f'},
-  { nombre: 'Crema',       hex: '#e8dcc4' },
+  { nombre: 'Negro',         hex: '#1a1a1a' },
+  { nombre: 'Blanco',        hex: '#f5f5f0' },
+  { nombre: 'Tierra',        hex: '#8b4513' },
+  { nombre: 'Oliva',         hex: '#556b2f' },
+  { nombre: 'Vino',          hex: '#722f37' },
+  { nombre: 'Mostaza',       hex: '#d4a017' },
+  { nombre: 'Azul Profundo', hex: '#1e3a5f' },
+  { nombre: 'Crema',         hex: '#e8dcc4' },
 ];
 
 export const TALLAS_MEDIDAS = {

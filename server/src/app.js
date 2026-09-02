@@ -14,6 +14,11 @@ import cookieParser from 'cookie-parser';
 import { env } from './lib/env.js';
 import { prisma } from './lib/prisma.js';
 import { rutasAuth } from './routes/auth.js';
+import { rutasMateriales } from './routes/materiales.js';
+import { rutasProductos } from './routes/productos.js';
+import { rutasRegistros } from './routes/registros.js';
+import { rutasCostosFijos } from './routes/costosFijos.js';
+import { rutasCategorias } from './routes/categorias.js';
 import { noEncontrado, manejadorErrores } from './middleware/errores.js';
 
 export const app = express();
@@ -46,6 +51,11 @@ app.get('/health', async (_req, res) => {
 
 // ── Rutas ────────────────────────────────────────────────────
 app.use('/api/v1/auth', rutasAuth);
+app.use('/api/v1/materiales', rutasMateriales);
+app.use('/api/v1/productos', rutasProductos);
+app.use('/api/v1/registros', rutasRegistros);
+app.use('/api/v1/costos-fijos', rutasCostosFijos);
+app.use('/api/v1/categorias', rutasCategorias);
 
 // ── Cierre ───────────────────────────────────────────────────
 app.use(noEncontrado);

@@ -39,7 +39,9 @@ if (esProduccion) {
 
 export const env = {
   esProduccion,
-  puerto: Number(process.env.PORT ?? 4000),
+  // API_PORT tiene prioridad para que un PORT inyectado por otra
+  // herramienta no choque con Vite. En Render solo existe PORT.
+  puerto: Number(process.env.API_PORT ?? process.env.PORT ?? 4000),
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET,
     refreshSecret: process.env.JWT_REFRESH_SECRET,

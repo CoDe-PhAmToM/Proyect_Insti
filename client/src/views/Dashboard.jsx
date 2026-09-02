@@ -10,12 +10,16 @@ import {
   AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, Wallet, Users,
 } from 'lucide-react';
+// PENDIENTE (Sprint 4): esta serie todavía es fija. Los indicadores
+// de arriba ya salen de la base; este gráfico no. Va marcado en
+// pantalla para no afirmar algo que el sistema no calculó.
 import { VENTAS_SEMANA } from '../data/mockData';
+import { bs, fechaCorta } from 'shared/formato';
 import { useRegistros } from '../context/RegistrosContext';
 
 export const Dashboard = () => {
   const {
-    registros, totalIngresos, totalEgresos, totalPersonal,
+    registros, ingresos, egresos, mezclaPersonal,
     gananciaReal, gananciaSinMezcla,
   } = useRegistros();
 
@@ -27,13 +31,13 @@ export const Dashboard = () => {
     <div className="p-8 space-y-6">
 
       {/* Alerta de mezcla personal/negocio — ahora con el número real */}
-      {totalPersonal > 0 && (
+      {mezclaPersonal > 0 && (
         <div className="bg-amber-50 border border-amber-300 rounded-sm p-4 flex items-start gap-3">
           <AlertTriangle size={18} className="text-amber-600 mt-0.5 shrink-0" />
           <div>
             <div className="text-sm font-black text-amber-900 mb-0.5">Gastos personales mezclados con el negocio</div>
             <div className="text-xs text-amber-800">
-              Se detectaron <strong>Bs. {totalPersonal.toFixed(2)}</strong> en gastos personales registrados desde la caja del negocio.
+              Se detectaron <strong>Bs. {mezclaPersonal.toFixed(2)}</strong> en gastos personales registrados desde la caja del negocio.
               Esto reduce tu ganancia real en el mismo monto.{' '}
               <button onClick={() => setDesgloseAbierto(true)} className="underline font-bold">Ver el cálculo →</button>
             </div>
@@ -47,7 +51,7 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <TrendingUp size={16} className="text-green-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {totalIngresos.toFixed(2)}</div>
+          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {ingresos.toFixed(2)}</div>
           <div className="text-[10px] text-stone-500 uppercase tracking-wider">Ingresos registrados</div>
         </div>
 
@@ -55,7 +59,7 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <TrendingDown size={16} className="text-red-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {totalEgresos.toFixed(2)}</div>
+          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {egresos.toFixed(2)}</div>
           <div className="text-[10px] text-stone-500 uppercase tracking-wider">Egresos registrados</div>
         </div>
 
@@ -78,11 +82,11 @@ export const Dashboard = () => {
           </div>
         </button>
 
-        <div className={`p-5 rounded-sm border ${totalPersonal > 0 ? 'border-amber-300 bg-amber-50' : 'border-stone-200 bg-white'}`}>
+        <div className={`p-5 rounded-sm border ${mezclaPersonal > 0 ? 'border-amber-300 bg-amber-50' : 'border-stone-200 bg-white'}`}>
           <div className="flex items-center justify-between mb-4">
-            <Users size={16} className={totalPersonal > 0 ? 'text-amber-600' : 'text-stone-400'} />
+            <Users size={16} className={mezclaPersonal > 0 ? 'text-amber-600' : 'text-stone-400'} />
           </div>
-          <div className={`text-2xl font-black mb-1 ${totalPersonal > 0 ? 'text-amber-800' : 'text-stone-900'}`}>Bs. {totalPersonal.toFixed(2)}</div>
+          <div className={`text-2xl font-black mb-1 ${mezclaPersonal > 0 ? 'text-amber-800' : 'text-stone-900'}`}>Bs. {mezclaPersonal.toFixed(2)}</div>
           <div className="text-[10px] text-stone-500 uppercase tracking-wider">Gastos personales mezclados</div>
         </div>
       </div>
@@ -103,15 +107,15 @@ export const Dashboard = () => {
           <div className="space-y-0">
             <div className="flex justify-between items-center py-3 border-b border-stone-800">
               <span className="text-sm text-stone-300">Total de ingresos registrados</span>
-              <span className="font-bold text-green-400">+ Bs. {totalIngresos.toFixed(2)}</span>
+              <span className="font-bold text-green-400">+ Bs. {ingresos.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-stone-800">
               <span className="text-sm text-stone-300">Total de egresos registrados</span>
-              <span className="font-bold text-red-400">− Bs. {totalEgresos.toFixed(2)}</span>
+              <span className="font-bold text-red-400">− Bs. {egresos.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-stone-800 pl-4">
               <span className="text-xs text-amber-400">↳ de los cuales, gastos personales mezclados</span>
-              <span className="text-xs text-amber-400">Bs. {totalPersonal.toFixed(2)}</span>
+              <span className="text-xs text-amber-400">Bs. {mezclaPersonal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center py-4 border-b-2 border-stone-700">
               <span className="text-sm font-bold">= Ganancia real (con gastos mezclados incluidos)</span>
@@ -229,22 +233,24 @@ export const Dashboard = () => {
           </thead>
           <tbody>
             {ultimosRegistros.map(r => (
-              <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.origen === 'personal' ? 'bg-amber-50/50' : ''}`}>
-                <td className="px-5 py-3 font-mono text-xs text-stone-500">{r.fecha}</td>
+              <tr key={r.id} className={`border-b border-stone-100 hover:bg-stone-50 ${r.origen === 'PERSONAL' ? 'bg-amber-50/50' : ''}`}>
+                <td className="px-5 py-3 font-mono text-xs text-stone-500">{fechaCorta(r.fecha)}</td>
                 <td className="px-5 py-3 font-medium text-sm">
                   {r.descripcion}
-                  {r.origen === 'personal' && (
+                  {r.origen === 'PERSONAL' && (
                     <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-sm font-bold">PERSONAL</span>
                   )}
                 </td>
-                <td className="px-5 py-3 text-xs text-stone-500">{r.categoria}</td>
+                <td className="px-5 py-3 text-xs text-stone-500">{r.categoria?.nombre}</td>
                 <td className="px-5 py-3 text-center">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${r.origen === 'negocio' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
-                    {r.origen.toUpperCase()}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
+                    r.tipo === 'RETIRO' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {r.tipo === 'RETIRO' ? 'RETIRO' : r.origen}
                   </span>
                 </td>
-                <td className={`px-5 py-3 text-right font-black ${r.tipo === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
-                  {r.tipo === 'ingreso' ? '+' : '-'} Bs. {r.monto.toFixed(2)}
+                <td className={`px-5 py-3 text-right font-black ${r.tipo === 'INGRESO' ? 'text-green-700' : 'text-red-600'}`}>
+                  {r.tipo === 'INGRESO' ? '+' : '−'} {bs(r.monto, { simbolo: false })}
                 </td>
               </tr>
             ))}

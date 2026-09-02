@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useRegistros } from '../context/RegistrosContext';
 import { useMateriales } from '../context/MaterialesContext';
-import { PRODUCTOS } from '../data/mockData';
 
 // Las 7 familias suman las 80 plantillas reales que mencionó el
 // equipo de Contaduría (12+10+15+18+9+8+8 = 80).
@@ -147,7 +146,7 @@ export const Reportes = () => {
 
 // ── Reporte: Estado de Resultados ────────────────────────────
 const EstadoResultados = () => {
-  const { totalIngresos, totalEgresos, gananciaReal, egresosPorCategoria } = useRegistros();
+  const { ingresos, egresos, gananciaReal, egresosPorCategoria } = useRegistros();
 
   return (
     <div>
@@ -156,7 +155,7 @@ const EstadoResultados = () => {
         <tbody>
           <tr className="border-b border-stone-100">
             <td className="py-2.5 font-medium">Ingresos por ventas</td>
-            <td className="py-2.5 text-right font-bold text-green-700">+ Bs. {totalIngresos.toFixed(2)}</td>
+            <td className="py-2.5 text-right font-bold text-green-700">+ Bs. {ingresos.toFixed(2)}</td>
           </tr>
           <tr>
             <td colSpan={2} className="pt-3 pb-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">Egresos por categoría</td>
@@ -169,7 +168,7 @@ const EstadoResultados = () => {
           ))}
           <tr className="border-t border-stone-200">
             <td className="py-2.5 font-bold">Total egresos</td>
-            <td className="py-2.5 text-right font-black text-red-700">− Bs. {totalEgresos.toFixed(2)}</td>
+            <td className="py-2.5 text-right font-black text-red-700">− Bs. {egresos.toFixed(2)}</td>
           </tr>
         </tbody>
       </table>
@@ -230,8 +229,8 @@ const FlujoCaja = () => {
 
 // ── Reporte: Kardex de materiales ────────────────────────────
 const Kardex = () => {
-  const { materiales } = useMateriales();
-  const valorTotal = materiales.reduce((a, m) => a + m.precio * m.stock, 0);
+  const { materiales, resumen } = useMateriales();
+  const valorTotal = resumen.valorInventario;
 
   return (
     <div>
@@ -248,12 +247,12 @@ const Kardex = () => {
         </thead>
         <tbody>
           {materiales.map(m => (
-            <tr key={m.codigo} className="border-b border-stone-50">
+            <tr key={m.id} className="border-b border-stone-50">
               <td className="py-2 font-mono text-xs text-stone-500">{m.codigo}</td>
               <td className="py-2 font-medium">{m.nombre}</td>
               <td className="py-2 text-right">{m.stock} {m.unidad}</td>
-              <td className="py-2 text-right text-stone-600">Bs. {m.precio.toFixed(2)}</td>
-              <td className="py-2 text-right font-bold">Bs. {(m.precio * m.stock).toFixed(2)}</td>
+              <td className="py-2 text-right text-stone-600">Bs. {m.precioUnitario.toFixed(2)}</td>
+              <td className="py-2 text-right font-bold">Bs. {m.valorInventario.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
@@ -263,25 +262,18 @@ const Kardex = () => {
         <div className="text-2xl font-black text-orange-400">Bs. {valorTotal.toFixed(2)}</div>
       </div>
       <p className="text-[11px] text-stone-400 mt-3">
-        Esta es la fotografía actual del stock. El kardex completo con historial de entradas y salidas
-        se habilita cuando el módulo de producción registre movimientos.
+        Fotografía actual del stock, valorizada a promedio ponderado. El historial de entradas y
+        salidas de cada material se consulta desde Materiales.
       </p>
     </div>
   );
 };
 
 // ── Reporte: Costeo de productos ─────────────────────────────
+// Los costos ya vienen calculados del servidor contra los precios
+// vigentes del inventario, así que acá no se recalcula nada.
 const CosteoProductos = () => {
-  const { materiales } = useMateriales();
-
-  const filas = PRODUCTOS.map(p => {
-    const subtotalMat = p.bom.reduce((a, item) => {
-      const mat = materiales.find(m => m.codigo === item.materialCodigo);
-      return a + (mat?.precio ?? 0) * item.cantidad;
-    }, 0);
-    const costoTotal = subtotalMat + p.manoObra + p.cif;
-    return { ...p, costoTotal };
-  });
+  const { productos: filas } = useMateriales();
 
   return (
     <div>
@@ -292,8 +284,9 @@ const CosteoProductos = () => {
             <th className="py-2 font-medium">SKU</th>
             <th className="py-2 font-medium">Producto</th>
             <th className="py-2 font-medium text-right">Materiales</th>
-            <th className="py-2 font-medium text-right">M. obra + CIF</th>
+            <th className="py-2 font-medium text-right">Mano de obra</th>
             <th className="py-2 font-medium text-right">Costo total</th>
+            <th className="py-2 font-medium text-right">Margen</th>
           </tr>
         </thead>
         <tbody>
@@ -301,16 +294,19 @@ const CosteoProductos = () => {
             <tr key={p.id} className="border-b border-stone-50">
               <td className="py-2.5 font-mono text-xs text-stone-500">{p.sku}</td>
               <td className="py-2.5 font-medium">{p.nombre}</td>
-              <td className="py-2.5 text-right text-stone-600">Bs. {(p.costoTotal - p.manoObra - p.cif).toFixed(2)}</td>
-              <td className="py-2.5 text-right text-stone-600">Bs. {(p.manoObra + p.cif).toFixed(2)}</td>
-              <td className="py-2.5 text-right font-black">Bs. {p.costoTotal.toFixed(2)}</td>
+              <td className="py-2.5 text-right text-stone-600 tabular-nums">Bs. {p.costoMateriales?.toFixed(2)}</td>
+              <td className="py-2.5 text-right text-stone-600 tabular-nums">Bs. {p.manoObraUnitaria?.toFixed(2)}</td>
+              <td className="py-2.5 text-right font-black tabular-nums">Bs. {p.costoTotal?.toFixed(2)}</td>
+              <td className={`py-2.5 text-right font-bold tabular-nums ${p.margenBrutoPct < 20 ? 'text-red-700' : 'text-green-700'}`}>
+                {p.margenBrutoPct?.toFixed(1)} %
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
       <p className="text-[11px] text-stone-400 mt-3">
-        Los productos creados desde el módulo de Costeo durante esta sesión no aparecen acá todavía —
-        este reporte se conecta al mismo inventario, pero los productos nuevos viven por ahora solo en esa vista.
+        Costos calculados contra los precios vigentes del inventario. Todavía no incluyen el gasto
+        indirecto por prenda: eso se prorratea cuando haya órdenes de producción terminadas.
       </p>
     </div>
   );

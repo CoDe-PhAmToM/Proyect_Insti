@@ -1,52 +1,112 @@
 // ============================================================
-// CONTEXT: Registros (ingresos/egresos)
-// Fuente única de verdad. Dashboard, Registros y Reportes leen
-// de acá — así los tres muestran siempre la misma ganancia real,
-// nunca números calculados por separado que puedan desincronizarse.
+// CONTEXT: Registros (ingresos, egresos y retiros)
+//
+// Fuente unica de verdad. Panel, Registros y Reportes leen de aca,
+// asi los tres muestran siempre la misma ganancia real.
+//
+// Los totales YA NO se calculan en el navegador: los manda el
+// servidor, que los saca del mismo motor compartido. Antes cada
+// vista sumaba por su cuenta y podian discrepar.
 // ============================================================
 
-import React, { createContext, useContext, useState } from 'react';
-import { REGISTROS as REGISTROS_INICIALES } from '../data/mockData';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../lib/api';
+import { useAuth } from './AuthContext';
 
 const RegistrosContext = createContext(null);
 
+const TOTALES_VACIOS = {
+  ingresos: 0,
+  egresos: 0,
+  retiros: 0,
+  mezclaPersonal: 0,
+  gananciaReal: 0,
+  gananciaSinMezcla: 0,
+  relacionCostoIngreso: null,
+};
+
 export const RegistrosProvider = ({ children }) => {
-  const [registros, setRegistros] = useState(REGISTROS_INICIALES);
+  const { usuario } = useAuth();
 
-  const agregarRegistro = (data) => {
-    const nuevo = {
-      id: Math.max(0, ...registros.map(r => r.id)) + 1,
-      ...data,
-    };
-    setRegistros(prev => [nuevo, ...prev]);
-  };
+  const [registros, setRegistros] = useState([]);
+  const [totales, setTotales] = useState(TOTALES_VACIOS);
+  const [egresosPorCategoria, setEgresosPorCategoria] = useState({});
+  const [categorias, setCategorias] = useState({ INGRESO: [], EGRESO: [], RETIRO: [] });
+  const [alertas, setAlertas] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState(null);
+  const [filtroFechas, setFiltroFechas] = useState({ desde: null, hasta: null });
 
-  // Totales derivados una sola vez acá — todas las vistas consumen
-  // el mismo cálculo, nunca lo repiten a mano.
-  const totalIngresos     = registros.filter(r => r.tipo === 'ingreso').reduce((a, r) => a + r.monto, 0);
-  const totalEgresos      = registros.filter(r => r.tipo === 'egreso').reduce((a, r) => a + r.monto, 0);
-  const totalPersonal     = registros.filter(r => r.origen === 'personal').reduce((a, r) => a + r.monto, 0);
-  const gananciaReal      = totalIngresos - totalEgresos;
-  const gananciaSinMezcla = gananciaReal + totalPersonal;
+  const cargar = useCallback(async () => {
+    if (!usuario || usuario.rol === 'CLIENTE') return;
+    setCargando(true);
+    setError(null);
+    try {
+      const [d, c] = await Promise.all([
+        api.get('/registros', filtroFechas),
+        api.get('/categorias'),
+      ]);
+      setRegistros(d.registros);
+      setTotales(d.totales);
+      setEgresosPorCategoria(d.egresosPorCategoria);
+      setCategorias(c.porTipo);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setCargando(false);
+    }
+  }, [usuario, filtroFechas]);
 
-  const egresosPorCategoria = registros
-    .filter(r => r.tipo === 'egreso')
-    .reduce((acc, r) => {
-      acc[r.categoria] = (acc[r.categoria] || 0) + r.monto;
-      return acc;
-    }, {});
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const agregarRegistro = useCallback(
+    async (datos) => {
+      const r = await api.post('/registros', datos);
+      // Se recarga en vez de insertar a mano: los totales y las
+      // alertas los decide el servidor, no el navegador.
+      await cargar();
+      if (r.alertas?.length) setAlertas((prev) => [...r.alertas, ...prev]);
+      return r.registro;
+    },
+    [cargar]
+  );
+
+  const eliminarRegistro = useCallback(
+    async (id) => {
+      await api.delete(`/registros/${id}`);
+      await cargar();
+    },
+    [cargar]
+  );
+
+  const buscarDuplicado = useCallback(
+    (datos) => api.get('/registros/posible-duplicado', datos).then((d) => d.duplicado),
+    []
+  );
+
+  const descartarAlerta = (i) => setAlertas((prev) => prev.filter((_, idx) => idx !== i));
 
   return (
-    <RegistrosContext.Provider value={{
-      registros,
-      agregarRegistro,
-      totalIngresos,
-      totalEgresos,
-      totalPersonal,
-      gananciaReal,
-      gananciaSinMezcla,
-      egresosPorCategoria,
-    }}>
+    <RegistrosContext.Provider
+      value={{
+        registros,
+        categorias,
+        alertas,
+        cargando,
+        error,
+        filtroFechas,
+        setFiltroFechas,
+        agregarRegistro,
+        eliminarRegistro,
+        buscarDuplicado,
+        descartarAlerta,
+        recargar: cargar,
+        ...totales,
+        egresosPorCategoria,
+      }}
+    >
       {children}
     </RegistrosContext.Provider>
   );
