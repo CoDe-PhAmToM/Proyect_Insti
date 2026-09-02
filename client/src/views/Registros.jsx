@@ -21,6 +21,7 @@ import { useRegistros } from '../context/RegistrosContext';
 import { useMateriales } from '../context/MaterialesContext';
 import { useAuth } from '../context/AuthContext';
 import { bs, fechaCorta, hoyISO } from 'shared/formato';
+import { cronometrar } from '../lib/bitacora';
 
 const TIPOS = [
   { id: 'INGRESO', label: 'Entró plata', ayuda: 'Una venta, un pedido cobrado', color: 'green' },
@@ -70,11 +71,17 @@ export const Registros = () => {
 
   const catsDelTipo = categorias[form.tipo] ?? [];
 
+  // El cronómetro mide cuánto tarda en cargar un movimiento. Es el
+  // indicador de curva de aprendizaje que pide la tesis: semana 1
+  // contra semana 3.
+  const relojRef = React.useRef(null);
+
   const abrirModal = () => {
     setForm({ ...FORM_VACIO, fecha: hoyISO() });
     setErrores({});
     setErrorEnvio(null);
     setModalAbierto(true);
+    relojRef.current = cronometrar();
   };
 
   const cambiarTipo = (tipo) =>
@@ -115,6 +122,14 @@ export const Registros = () => {
         productoId: form.productoId || null,
         cantidad: form.cantidad ? Number(form.cantidad) : null,
         precioUnitario: form.precioUnitario ? Number(form.precioUnitario) : null,
+      });
+      relojRef.current?.fin('registro_creado', {
+        entidad: 'registro',
+        metadata: {
+          tipo: form.tipo,
+          conPrenda: Boolean(form.productoId),
+          conCantidad: Boolean(form.cantidad),
+        },
       });
       setModalAbierto(false);
     } catch (e) {

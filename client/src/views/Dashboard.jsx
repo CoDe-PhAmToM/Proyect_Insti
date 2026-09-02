@@ -5,15 +5,11 @@
 // de Registros y el nuevo módulo de Reportes.
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   TrendingUp, TrendingDown, Wallet, Users,
 } from 'lucide-react';
-// PENDIENTE (Sprint 4): esta serie todavía es fija. Los indicadores
-// de arriba ya salen de la base; este gráfico no. Va marcado en
-// pantalla para no afirmar algo que el sistema no calculó.
-import { VENTAS_SEMANA } from '../data/mockData';
 import { bs, fechaCorta } from 'shared/formato';
 import { useRegistros } from '../context/RegistrosContext';
 
@@ -24,7 +20,32 @@ export const Dashboard = () => {
   } = useRegistros();
 
   const [desgloseAbierto, setDesgloseAbierto] = useState(false);
-  const maxIngreso = Math.max(...VENTAS_SEMANA.map(v => v.ingreso));
+
+  // Serie real de los ultimos 7 dias, armada desde los registros de
+  // la base. Antes era un arreglo fijo: numeros reales al lado de un
+  // grafico inventado, en la misma pantalla.
+  const VENTAS_SEMANA = useMemo(() => {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const hoy = new Date();
+    const serie = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(hoy);
+      d.setDate(hoy.getDate() - i);
+      const clave = d.toISOString().slice(0, 10);
+      const delDia = registros.filter(r => String(r.fecha).slice(0, 10) === clave);
+
+      serie.push({
+        dia: dias[d.getDay()],
+        ingreso: delDia.filter(r => r.tipo === 'INGRESO').reduce((a, r) => a + r.monto, 0),
+        egreso: delDia.filter(r => r.tipo !== 'INGRESO').reduce((a, r) => a + r.monto, 0),
+      });
+    }
+    return serie;
+  }, [registros]);
+
+  const maxIngreso = Math.max(1, ...VENTAS_SEMANA.map(v => Math.max(v.ingreso, v.egreso)));
+  const semanaVacia = VENTAS_SEMANA.every(v => v.ingreso === 0 && v.egreso === 0);
   const ultimosRegistros = registros.slice(0, 5);
 
   return (
@@ -138,19 +159,29 @@ export const Dashboard = () => {
       )}
 
       <div className="grid grid-cols-3 gap-6">
-        {/* Gráfico ingresos vs egresos (semana de referencia) */}
+        {/* Gráfico de los últimos 7 días, con los movimientos reales */}
         <div className="col-span-2 bg-white border border-stone-200 p-6 rounded-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 mb-1">Esta semana</div>
-              <h2 className="text-xl font-black tracking-tight">Ingresos vs Egresos</h2>
+              <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 mb-1">Últimos 7 días</div>
+              <h2 className="text-xl font-black tracking-tight">Lo que entró y lo que salió</h2>
             </div>
             <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-orange-500 inline-block" /> Ingresos</span>
-              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-stone-300 inline-block" /> Egresos</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-orange-500 inline-block" /> Entró</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-stone-300 inline-block" /> Salió</span>
             </div>
           </div>
-          <div className="flex items-end gap-4 h-48">
+
+          {semanaVacia && (
+            <div className="text-sm text-stone-500 py-12 text-center">
+              No hubo movimientos en los últimos 7 días.
+              <div className="text-xs text-stone-400 mt-1">
+                El gráfico se llena solo a medida que vas anotando.
+              </div>
+            </div>
+          )}
+
+          <div className={`flex items-end gap-4 h-48 ${semanaVacia ? 'hidden' : ''}`}>
             {VENTAS_SEMANA.map((v, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full flex-1 flex items-end gap-1">
