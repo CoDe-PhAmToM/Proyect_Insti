@@ -35,3 +35,7 @@ Thumbs.db
 # Misc
 *.log
 coverage/
+
+# Excepcion: la plantilla si se versiona
+!.env.example
+!**/.env.example

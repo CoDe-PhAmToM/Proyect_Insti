@@ -1,27 +1,23 @@
 {
   "name": "gestione-confecciones",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Plataforma de Gestion Financiera para la Rentabilidad en Microempresas de Confeccion Informal - Distrito 6, El Alto",
+  "workspaces": ["shared", "client", "server"],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.3.0",
-    "@vitejs/plugin-react": "^4.7.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "vite": "^5.4.21"
+    "dev": "concurrently -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "npm run dev --workspace=client",
+    "dev:api": "npm run dev --workspace=server",
+    "build": "npm run build --workspace=client",
+    "test": "npm run test --workspace=server",
+    "db:migrate": "npm run db:migrate --workspace=server",
+    "db:seed": "npm run db:seed --workspace=server",
+    "db:studio": "npm run db:studio --workspace=server",
+    "db:reset": "npm run db:reset --workspace=server"
   },
   "devDependencies": {
-    "autoprefixer": "^10.5.0",
-    "lucide-react": "^1.17.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^4.3.0"
-  }
+    "concurrently": "^9.1.2"
+  },
+  "engines": { "node": ">=20.11.0" }
 }
