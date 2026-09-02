@@ -19,6 +19,8 @@ import { rutasProductos } from './routes/productos.js';
 import { rutasRegistros } from './routes/registros.js';
 import { rutasCostosFijos } from './routes/costosFijos.js';
 import { rutasCategorias } from './routes/categorias.js';
+import { rutasOrdenes } from './routes/ordenes.js';
+import { rutasIndicadores } from './routes/indicadores.js';
 import { noEncontrado, manejadorErrores } from './middleware/errores.js';
 
 export const app = express();
@@ -56,6 +58,8 @@ app.use('/api/v1/productos', rutasProductos);
 app.use('/api/v1/registros', rutasRegistros);
 app.use('/api/v1/costos-fijos', rutasCostosFijos);
 app.use('/api/v1/categorias', rutasCategorias);
+app.use('/api/v1/ordenes', rutasOrdenes);
+app.use('/api/v1/indicadores', rutasIndicadores);
 
 // ── Cierre ───────────────────────────────────────────────────
 app.use(noEncontrado);

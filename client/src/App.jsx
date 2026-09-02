@@ -17,6 +17,7 @@ import { Sidebar, TopBar }          from './components/Layout';
 import { Dashboard }                from './views/Dashboard';
 import { Registros }                from './views/Registros';
 import { Materiales, Costeo }       from './views/MaterialesCosteo';
+import { Ordenes }                  from './views/Ordenes';
 import { Reportes }                 from './views/Reportes';
 import { InteligenciaIA }           from './views/InteligenciaIA';
 import { Catalogo, Personalizador } from './views/CatalogoPersonalizar';
@@ -27,6 +28,7 @@ import { AuthProvider, useAuth }    from './context/AuthContext';
 import { MaterialesProvider }       from './context/MaterialesContext';
 import { CartProvider }             from './context/CartContext';
 import { RegistrosProvider }        from './context/RegistrosContext';
+import { OrdenesProvider }          from './context/OrdenesContext';
 
 // ── Pantalla mientras revive la sesión ───────────────────────
 // El plan gratuito de Render duerme el servidor: la primera
@@ -73,6 +75,7 @@ const AppConSesion = () => {
           {vista === 'dashboard'    && <Dashboard />}
           {vista === 'registros'    && <Registros />}
           {vista === 'materiales'   && <Materiales />}
+          {vista === 'ordenes'      && <Ordenes />}
           {vista === 'costeo'       && <Costeo />}
           {vista === 'reportes'     && <Reportes />}
           {vista === 'ia'           && <InteligenciaIA />}
@@ -93,9 +96,11 @@ const Enrutador = () => {
   return (
     <MaterialesProvider>
       <RegistrosProvider>
-        <CartProvider>
-          <AppConSesion />
-        </CartProvider>
+        <OrdenesProvider>
+          <CartProvider>
+            <AppConSesion />
+          </CartProvider>
+        </OrdenesProvider>
       </RegistrosProvider>
     </MaterialesProvider>
   );

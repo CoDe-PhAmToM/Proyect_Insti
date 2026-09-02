@@ -11,7 +11,7 @@
 
 import {
   Activity, Layers, Target, Sparkles, FileBarChart2,
-  ShoppingBag, Zap, BookOpen,
+  ShoppingBag, Zap, BookOpen, ClipboardList,
 } from 'lucide-react';
 
 export const ROLES = {
@@ -25,6 +25,7 @@ export const NAV_ITEMS = [
   { id: 'dashboard',    label: 'Panel general',     icon: Activity,      grupo: 'principal',     rol: 'productor', titulo: 'Panel general',        subtitulo: 'Resumen ejecutivo'          },
   { id: 'registros',    label: 'Ingresos/Egresos',  icon: BookOpen,      grupo: 'principal',     rol: 'productor', titulo: 'Ingresos y Egresos',    subtitulo: 'Registro financiero diario' },
   { id: 'materiales',   label: 'Materiales',        icon: Layers,        grupo: 'produccion',    rol: 'productor', titulo: 'Materiales e insumos',  subtitulo: 'Inventario de producción'   },
+  { id: 'ordenes',      label: 'Órdenes',           icon: ClipboardList, grupo: 'produccion',    rol: 'productor', titulo: 'Órdenes de producción', subtitulo: 'Qué se está haciendo'       },
   { id: 'costeo',       label: 'Costeo',            icon: Target,        grupo: 'produccion',    rol: 'productor', titulo: 'Costeo de producción',  subtitulo: 'Cálculo de costos'          },
   { id: 'reportes',     label: 'Reportes',          icon: FileBarChart2, grupo: 'contabilidad',  rol: 'productor', titulo: 'Reportes contables',    subtitulo: 'Plantillas de Contaduría'   },
   { id: 'ia',           label: 'Recomendaciones',   icon: Sparkles,      grupo: 'inteligencia',  rol: 'productor', titulo: 'Recomendaciones',       subtitulo: 'Inteligencia analítica'     },

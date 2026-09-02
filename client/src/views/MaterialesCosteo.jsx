@@ -18,6 +18,7 @@ import {
 import { Modal, FormField, inputClass } from '../components/Modal';
 import { Cargando, ErrorCarga, SinDatos } from '../components/Layout';
 import { useMateriales } from '../context/MaterialesContext';
+import { useOrdenes } from '../context/OrdenesContext';
 import { useAuth } from '../context/AuthContext';
 import { bs, fechaCorta } from 'shared/formato';
 import { margenBrutoPct, precioSugerido } from 'shared/costeo';
@@ -777,24 +778,92 @@ export const Costeo = () => {
               </div>
             </div>
 
-            {/* Gastos fijos: la base del punto de equilibrio (Sprint 3) */}
-            {costosFijos && (
-              <div className="bg-white border border-stone-200 p-5 rounded-sm text-sm">
-                <div className="text-[11px] tracking-[0.2em] uppercase text-stone-500 mb-2">
-                  Gastos fijos del taller
-                </div>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-stone-600">Por mes (luz, alquiler, agua)</span>
-                  <span className="font-black">{bs(costosFijos.totalMensual)}</span>
-                </div>
-                {costosFijos.aviso && (
-                  <p className="text-[11px] text-stone-500 mt-2 leading-snug">{costosFijos.aviso}</p>
-                )}
-              </div>
-            )}
+            {/* Punto de equilibrio: el indicador que nombra el objetivo 3 */}
+            <PuntoEquilibrio productoId={seleccionado} costosFijos={costosFijos} />
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ── Punto de equilibrio ──────────────────────────────────────
+// Objetivo específico 3. Se muestra el número y, al lado, la frase
+// que lo explica: "punto de equilibrio: 82" no le dice nada a
+// nadie; "tenés que vender 82 poleras al mes" sí.
+
+const PuntoEquilibrio = ({ productoId, costosFijos }) => {
+  const { equilibrio } = useOrdenes();
+
+  if (!equilibrio) return null;
+
+  const p = equilibrio.productos.find((x) => x.id === productoId);
+  if (!p) return null;
+
+  const pe = p.puntoEquilibrio;
+
+  return (
+    <div className="bg-white border border-stone-200 rounded-sm overflow-hidden">
+      <div className="p-5 border-b border-stone-200">
+        <div className="text-[11px] tracking-[0.2em] uppercase text-stone-500 mb-1">
+          Cuánto tenés que vender
+        </div>
+        <h3 className="text-lg font-black tracking-tight">Punto de equilibrio</h3>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {equilibrio.aviso ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-sm p-3 text-sm text-amber-900">
+            {equilibrio.aviso}
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-baseline text-sm">
+              <span className="text-stone-600">Gastos fijos del taller</span>
+              <span className="font-bold tabular-nums">
+                {bs(equilibrio.costosFijosMensuales)} / mes
+              </span>
+            </div>
+
+            <div className="flex justify-between items-baseline text-sm">
+              <span className="text-stone-600">
+                De cada venta te queda para cubrirlos
+              </span>
+              <span className="font-bold tabular-nums">
+                {bs(p.margenContribucionUnitario)} ({p.razonContribucion.toFixed(0)} %)
+              </span>
+            </div>
+
+            {pe.alcanzable ? (
+              <div className="bg-stone-950 text-white p-5 rounded-sm">
+                <div className="text-4xl font-black text-orange-400 tabular-nums">{pe.unidades}</div>
+                <div className="text-sm text-stone-300 mt-1 leading-snug">{p.explicacion}</div>
+                <div className="text-xs text-stone-500 mt-2">
+                  Son {bs(pe.montoBs)} de ventas en el mes.
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-50 border-2 border-red-300 p-4 rounded-sm">
+                <div className="font-black text-red-900 text-sm mb-1">
+                  Con este precio no hay punto de equilibrio
+                </div>
+                <div className="text-sm text-red-800 leading-snug">{pe.motivo}</div>
+                <div className="text-xs text-red-700 mt-2">
+                  No es cuestión de vender más: cada prenda que sale te resta plata. Hay que subir el
+                  precio o bajar el costo.
+                </div>
+              </div>
+            )}
+
+            {equilibrio.masFacil && equilibrio.masFacil.nombre !== p.nombre && (
+              <div className="text-xs text-stone-500 leading-snug border-t border-stone-100 pt-3">
+                Tu prenda más fácil de sostener es <strong>{equilibrio.masFacil.nombre}</strong>: con{' '}
+                {equilibrio.masFacil.unidades} al mes ya cubrís todos los gastos fijos.
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
