@@ -18,6 +18,7 @@ import { Dashboard }                from './views/Dashboard';
 import { Registros }                from './views/Registros';
 import { Materiales, Costeo }       from './views/MaterialesCosteo';
 import { Ordenes }                  from './views/Ordenes';
+import { PedidosTaller, MisPedidos } from './views/Pedidos';
 import { Reportes }                 from './views/Reportes';
 import { InteligenciaIA }           from './views/InteligenciaIA';
 import { Catalogo, Personalizador } from './views/CatalogoPersonalizar';
@@ -79,6 +80,8 @@ const AppConSesion = () => {
           {vista === 'costeo'       && <Costeo />}
           {vista === 'reportes'     && <Reportes />}
           {vista === 'ia'           && <InteligenciaIA />}
+          {vista === 'pedidos'      && <PedidosTaller />}
+          {vista === 'mispedidos'   && <MisPedidos />}
           {vista === 'catalogo'     && <Catalogo setVista={setVista} />}
           {vista === 'personalizar' && <Personalizador />}
         </div>

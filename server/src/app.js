@@ -23,6 +23,7 @@ import { rutasOrdenes } from './routes/ordenes.js';
 import { rutasIndicadores } from './routes/indicadores.js';
 import { rutasReportes } from './routes/reportes.js';
 import { rutasRecomendaciones } from './routes/recomendaciones.js';
+import { rutasTienda, rutasPedidos } from './routes/tienda.js';
 import { rutasEventos, rutasLineaBase, rutasAdmin } from './routes/medicion.js';
 import { noEncontrado, manejadorErrores } from './middleware/errores.js';
 
@@ -40,7 +41,7 @@ app.use(
     credentials: true, // necesario para que viaje la cookie de refresh
   })
 );
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '4mb' })); // los estampados viajan en base64
 app.use(cookieParser());
 
 // ── Salud ────────────────────────────────────────────────────
@@ -65,6 +66,8 @@ app.use('/api/v1/ordenes', rutasOrdenes);
 app.use('/api/v1/indicadores', rutasIndicadores);
 app.use('/api/v1/reportes', rutasReportes);
 app.use('/api/v1/recomendaciones', rutasRecomendaciones);
+app.use('/api/v1/tienda', rutasTienda);
+app.use('/api/v1/pedidos', rutasPedidos);
 app.use('/api/v1/eventos', rutasEventos);
 app.use('/api/v1/linea-base', rutasLineaBase);
 app.use('/api/v1/admin', rutasAdmin);

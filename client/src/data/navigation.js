@@ -11,7 +11,7 @@
 
 import {
   Activity, Layers, Target, Sparkles, FileBarChart2,
-  ShoppingBag, Zap, BookOpen, ClipboardList,
+  ShoppingBag, Zap, BookOpen, ClipboardList, Inbox, Package,
 } from 'lucide-react';
 
 export const ROLES = {
@@ -29,7 +29,9 @@ export const NAV_ITEMS = [
   { id: 'costeo',       label: 'Costeo',            icon: Target,        grupo: 'produccion',    rol: 'productor', titulo: 'Costeo de producción',  subtitulo: 'Cálculo de costos'          },
   { id: 'reportes',     label: 'Reportes',          icon: FileBarChart2, grupo: 'contabilidad',  rol: 'productor', titulo: 'Reportes contables',    subtitulo: 'Plantillas de Contaduría'   },
   { id: 'ia',           label: 'Recomendaciones',   icon: Sparkles,      grupo: 'inteligencia',  rol: 'productor', titulo: 'Recomendaciones',       subtitulo: 'Análisis de tus datos'      },
+  { id: 'pedidos',      label: 'Pedidos',           icon: Inbox,         grupo: 'tienda',        rol: 'productor', titulo: 'Pedidos de la tienda',  subtitulo: 'Lo que te encargaron'       },
   { id: 'catalogo',     label: 'Catálogo',          icon: ShoppingBag,   grupo: 'tienda',        rol: 'cliente',   titulo: 'Catálogo público',      subtitulo: 'Tienda online'              },
+  { id: 'mispedidos',   label: 'Mis pedidos',       icon: Package,       grupo: 'tienda',        rol: 'cliente',   titulo: 'Mis pedidos',           subtitulo: 'Lo que encargaste'          },
   { id: 'personalizar', label: 'Personalizar',      icon: Zap,           grupo: 'tienda',        rol: 'cliente',   titulo: 'Personalizador',        subtitulo: 'Editor 2D'                  },
 ];
 
