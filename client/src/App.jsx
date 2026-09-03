@@ -23,7 +23,8 @@ import { Reportes }                 from './views/Reportes';
 import { InteligenciaIA }           from './views/InteligenciaIA';
 import { Catalogo, Personalizador } from './views/CatalogoPersonalizar';
 import { Login }                    from './views/Login';
-import { NAV_ITEMS, vistaInicial }  from './data/navigation';
+import { NAV_ITEMS, vistaInicial, puedeVer } from './data/navigation';
+import { LimiteError }              from './components/LimiteError';
 
 import { AuthProvider, useAuth }    from './context/AuthContext';
 import { MaterialesProvider }       from './context/MaterialesContext';
@@ -54,6 +55,12 @@ const AppConSesion = () => {
   const [vista, setVista] = useState(vistaInicial(rolVista));
   const [menuAbierto, setMenuAbierto] = useState(false);
 
+  // Si el rol no puede ver esta pantalla, se lo manda al inicio.
+  // Pasa si un ayudante tenia abierta una vista y el dueno le cambio
+  // el rol, o si alguien escribe la vista a mano.
+  const vistaValida = puedeVer(vista, usuario?.rol) ? vista : vistaInicial(rolVista);
+  if (vistaValida !== vista) setVista(vistaValida);
+
   const config = NAV_ITEMS.find((i) => i.id === vista);
   const sinTopBar = vista === 'personalizar';
 
@@ -82,6 +89,7 @@ const AppConSesion = () => {
         )}
 
         <div className="flex-1 overflow-y-auto">
+          <LimiteError clave={vista} nombre={vista}>
           {vista === 'dashboard'    && <Dashboard />}
           {vista === 'registros'    && <Registros />}
           {vista === 'materiales'   && <Materiales />}
@@ -93,6 +101,7 @@ const AppConSesion = () => {
           {vista === 'mispedidos'   && <MisPedidos />}
           {vista === 'catalogo'     && <Catalogo setVista={setVista} />}
           {vista === 'personalizar' && <Personalizador />}
+          </LimiteError>
         </div>
       </main>
     </div>

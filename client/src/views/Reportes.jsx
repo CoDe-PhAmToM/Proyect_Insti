@@ -51,6 +51,12 @@ export const Reportes = () => {
 
   const cargar = useCallback(async () => {
     if (!categoria?.disponible) return setDatos(null);
+
+    // Se limpia ANTES de pedir. Sin esto, al cambiar de reporte React
+    // vuelve a pintar con el categoriaId nuevo pero los datos del
+    // reporte anterior — que tienen otra forma — y la pantalla se
+    // cae en blanco. Fue un error real, no una precaución teórica.
+    setDatos(null);
     setCargando(true);
     setError(null);
     try {
@@ -63,7 +69,16 @@ export const Reportes = () => {
   }, [categoriaId, periodo, categoria]);
 
   useEffect(() => {
-    cargar();
+    let vigente = true;
+    // Si el usuario cambia de reporte rápido, la respuesta lenta de
+    // la petición vieja no debe pisar a la nueva.
+    (async () => {
+      await cargar();
+      if (!vigente) setDatos(null);
+    })();
+    return () => {
+      vigente = false;
+    };
   }, [cargar]);
 
   const exportar = async (formato) => {
@@ -181,7 +196,9 @@ export const Reportes = () => {
             {!categoria.disponible && <NoDisponible categoria={categoria} />}
             {categoria.disponible && cargando && <Cargando texto="Calculando el reporte..." />}
             {categoria.disponible && error && <ErrorCarga mensaje={error} onReintentar={cargar} />}
-            {categoria.disponible && datos && !cargando && (
+            {/* datos.tipo === categoriaId es el segundo candado: solo
+                se pinta si los datos son de ESTE reporte, no de otro. */}
+            {categoria.disponible && datos && datos.tipo === categoriaId && !cargando && (
               <>
                 {categoriaId === 'comparativo' && <Comparativo d={datos} />}
                 {categoriaId === 'estado-resultados' && <EstadoResultados d={datos} />}

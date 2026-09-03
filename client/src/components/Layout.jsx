@@ -27,7 +27,7 @@ const ETIQUETA_ROL = {
 // ── Sidebar ──────────────────────────────────────────────────
 
 export const Sidebar = ({ vista, setVista, usuario, rol, onSalir, abierto, onCerrar }) => {
-  const items = itemsPorRol(rol);
+  const items = itemsPorRol(rol, usuario?.rol);
 
   // En celular, elegir una pantalla cierra el cajón: si no, queda
   // tapando el contenido que la persona quiso ver.
