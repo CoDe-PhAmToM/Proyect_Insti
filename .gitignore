@@ -39,3 +39,8 @@ coverage/
 # Excepcion: la plantilla si se versiona
 !.env.example
 !**/.env.example
+
+# Claves de las cuentas de demostracion. Nunca al repositorio:
+# el piloto maneja datos financieros de personas identificables.
+.credenciales-demo.txt
+**/.credenciales-demo.txt

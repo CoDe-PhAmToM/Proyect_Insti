@@ -114,27 +114,26 @@ piloto para el análisis estadístico del capítulo de resultados.
 - Iconos de `lucide-react`.
 - Validación de entrada en el servidor con **Zod** en todos los endpoints.
 
-## Brechas conocidas contra el documento de tesis
+## Estado contra el documento de tesis
 
-Estado a la fecha. La auditoría completa (30 puntos priorizados) y el plan de obra por sprints están
-en el archivo de plan de la sesión.
+Cerrado tras 11 sprints. La auditoría original (30 puntos priorizados) está en el archivo de plan.
 
-**Ya resuelto**
-- Objetivo 4 (separación personal/negocio): campo `origen`, alerta de mezcla, doble cálculo de ganancia.
-- Motor de costeo con pruebas: costo unitario, margen de contribución, punto de equilibrio, prorrateo
-  de CIF. 16 pruebas en `server/test/costeo.test.js`, escritas contra cálculos hechos a mano.
-- Esquema de base de datos completo (19 tablas) con órdenes de producción, kardex y costos fijos.
+**Los cinco objetivos específicos tienen respaldo en la base**
+- Obj. 1 — registro de ingresos/egresos con los campos del cuaderno de papel.
+- Obj. 2 — Kardex por promedio ponderado, con el costo congelado al momento del consumo.
+- Obj. 3 — costeo por órdenes, margen de contribución y punto de equilibrio, con prorrateo de CIF.
+- Obj. 4 — separación personal/negocio: campo `origen`, alerta de mezcla, doble cálculo de ganancia.
+- Obj. 5 — instrumentación para el capítulo de resultados: `LineaBase`, `EventoUso`, `RespuestaSus`,
+  exportación anonimizada (T01, T02…).
 
-**Pendiente**
-- El frontend sigue leyendo de `client/src/data/mockData.js`. Migrar a llamadas HTTP y borrar ese archivo.
-- Autenticación, tenancy y toda la capa de rutas del servidor.
-- Fechas: en el modelo nuevo ya son `DATE`; el cliente todavía las maneja como texto `DD/MM/YYYY`.
-- La pantalla de recomendaciones muestra cifras inventadas ("247 movimientos"). No debe llegar así a
-  la defensa.
-- El gráfico semanal del panel usa datos fijos mientras los KPIs se calculan en vivo.
-- El indicador de conexión está fijo en `true` y puede mostrar "SIN CONEXIÓN" siendo mentira.
-- Sin diseño para celular, siendo que el ítem 8 de la encuesta pregunta justamente por uso en celular.
-- Exportar a PDF/Excel solo muestra un aviso.
+43 pruebas: 16 de costeo contra cálculos hechos a mano, 12 de aislamiento entre talleres, el resto
+de autenticación y roles. `npm test` desde la raíz.
+
+**Lo que queda abierto**
+- Las tablas en celular siguen siendo tablas con scroll horizontal. Deberían ser tarjetas. El ítem 8
+  de la encuesta pregunta justamente por uso en celular, así que esto tiene peso en los resultados.
+- Los puntos 23 a 30 de la auditoría son contradicciones del **documento**, no del código: los
+  resuelve quien redacta, no un commit.
 
 ## Notas de despliegue
 

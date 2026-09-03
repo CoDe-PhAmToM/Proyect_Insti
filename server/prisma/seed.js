@@ -14,9 +14,28 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-// Clave de los usuarios de prueba. En produccion se cambia por
-// variable de entorno; nunca dejar esta en un despliegue real.
+// Clave de los usuarios de prueba.
+//
+// El valor por defecto esta escrito aca, o sea que esta en el
+// repositorio: cualquiera que lea el codigo lo sabe. Sirve para
+// desarrollo y para nada mas. En produccion la semilla se planta
+// en vez de crear cuentas que ya vienen abiertas.
+//
+// Ojo: el upsert de abajo usa `update: {}`, asi que volver a correr
+// la semilla NO le cambia la clave a un usuario que ya existe. Para
+// rotar una clave hay que hacerlo explicitamente contra la base.
 const CLAVE_DEMO = process.env.SEED_PASSWORD ?? 'gestione2026';
+
+if (process.env.NODE_ENV === 'production' && !process.env.SEED_PASSWORD) {
+  console.error(
+    '
+  La semilla se niega a correr en produccion con la clave del repositorio.
+' +
+    '  Volve a intentar con:  SEED_PASSWORD="una-clave-larga" npm run db:seed
+'
+  );
+  process.exit(1);
+}
 
 // ── Categorias globales ──────────────────────────────────────
 // Sin tallerId: las ve todo el mundo. Estan redactadas como las
