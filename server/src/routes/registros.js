@@ -65,6 +65,9 @@ rutasRegistros.get('/', async (req, res) => {
     ...(tipo ? { tipo } : {}),
     ...(origen ? { origen } : {}),
     ...(incluirLineaBase === 'true' ? {} : { esLineaBase: false }),
+    // Los anulados se siguen viendo en la lista, pero no suman:
+    // el rastro queda, el efecto contable no.
+    ...(req.query.incluirAnulados === 'true' ? {} : {}),
     ...(desde || hasta
       ? {
           fecha: {
@@ -82,6 +85,7 @@ rutasRegistros.get('/', async (req, res) => {
       categoria: { select: { id: true, nombre: true, esPersonal: true } },
       producto: { select: { id: true, nombre: true, sku: true } },
       creadoPor: { select: { id: true, nombre: true } },
+      anuladoPor: { select: { id: true, nombre: true } },
     },
     take: 500,
   });
@@ -95,9 +99,11 @@ rutasRegistros.get('/', async (req, res) => {
 
   // Los totales se calculan con la misma formula que usa el motor
   // compartido, para que el servidor y la pantalla nunca discrepen.
-  const totales = resultadoPeriodo(lista);
+  // Los anulados se excluyen del calculo pero siguen en la lista.
+  const vigentes = lista.filter((r) => !r.anuladoEn);
+  const totales = resultadoPeriodo(vigentes);
 
-  const egresosPorCategoria = lista
+  const egresosPorCategoria = vigentes
     .filter((r) => r.tipo !== 'INGRESO')
     .reduce((acc, r) => {
       const k = r.categoria.nombre;
@@ -105,7 +111,12 @@ rutasRegistros.get('/', async (req, res) => {
       return acc;
     }, {});
 
-  res.json({ registros: lista, totales, egresosPorCategoria });
+  res.json({
+    registros: lista,
+    totales,
+    egresosPorCategoria,
+    anulados: lista.length - vigentes.length,
+  });
 });
 
 // ── POST / ───────────────────────────────────────────────────
@@ -178,13 +189,72 @@ rutasRegistros.post('/', async (req, res) => {
   });
 });
 
+// ── POST /:id/anular ─────────────────────────────────────────
+//
+// Un movimiento mal cargado se ANULA, no se borra ni se edita.
+//
+// Es la practica contable correcta y ademas la unica defendible en
+// una tesis: si los registros se pudieran editar, cualquier numero
+// del capitulo de resultados seria cuestionable. Anulando, queda la
+// fila original, quien la anulo y por que.
+
+rutasRegistros.post('/:id/anular', async (req, res) => {
+  const registro = await prisma.registro.findFirst({
+    where: { id: req.params.id, ...scope(req) },
+  });
+  if (!registro) throw errores.noEncontrado('El registro');
+  if (registro.anuladoEn) throw errores.conflicto('Ese movimiento ya estaba anulado');
+
+  const motivo = String(req.body?.motivo ?? '').trim();
+  if (motivo.length < 3) {
+    throw errores.datosInvalidos('Escribí por qué lo anulás. Queda registrado.');
+  }
+
+  const anulado = await prisma.registro.update({
+    where: { id: registro.id },
+    data: {
+      anuladoEn: new Date(),
+      anuladoPorId: req.usuario.usuarioId,
+      motivoAnulacion: motivo.slice(0, 200),
+    },
+  });
+
+  // Si era una venta que descontó stock, las prendas vuelven.
+  if (registro.tipo === 'INGRESO' && registro.productoId && Number(registro.cantidad) > 0) {
+    await moverStockProducto({
+      tallerId: req.tallerId,
+      productoId: registro.productoId,
+      tipo: 'ENTRADA',
+      cantidad: Number(registro.cantidad),
+      motivo: `Anulación: ${motivo}`,
+      registroId: registro.id,
+      fecha: registro.fecha,
+    }).catch(() => {});
+  }
+
+  res.json({
+    ok: true,
+    anuladoEn: anulado.anuladoEn,
+    mensaje: 'Movimiento anulado. Queda en la lista tachado, con el motivo.',
+  });
+});
+
 // ── DELETE /:id ──────────────────────────────────────────────
+// Solo lo cargado hoy y todavia sin anular: un error de tipeo
+// recien hecho se borra, uno de la semana pasada se anula.
 
 rutasRegistros.delete('/:id', async (req, res) => {
   const existe = await prisma.registro.findFirst({
     where: { id: req.params.id, ...scope(req) },
   });
   if (!existe) throw errores.noEncontrado('El registro');
+
+  const horas = (Date.now() - existe.creadoEn.getTime()) / 3600000;
+  if (horas > 24) {
+    throw errores.conflicto(
+      'Este movimiento tiene más de un día. Anulalo en vez de borrarlo, así queda el registro de qué pasó.'
+    );
+  }
 
   await prisma.registro.delete({ where: { id: existe.id } });
   res.json({ ok: true });

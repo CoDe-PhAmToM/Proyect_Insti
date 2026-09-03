@@ -50,6 +50,24 @@ export const manejadorErrores = (err, req, res, _next) => {
     stack: err?.stack,
   });
 
+  // Se guarda para que el equipo pueda verlo despues. Con
+  // .catch(): si falla el guardado, no se puede fallar otra vez
+  // dentro del manejador de errores.
+  import('../lib/prisma.js')
+    .then(({ prisma }) =>
+      prisma.errorApp.create({
+        data: {
+          origen: 'servidor',
+          mensaje: String(err?.message ?? 'error sin mensaje').slice(0, 500),
+          pila: String(err?.stack ?? '').slice(0, 4000),
+          ruta: `${req.method} ${req.originalUrl}`.slice(0, 200),
+          usuarioId: req.usuario?.usuarioId ?? null,
+          tallerId: req.usuario?.tallerId ?? null,
+        },
+      })
+    )
+    .catch(() => {});
+
   res.status(500).json({
     error: 'Algo fallo de nuestro lado. Volve a intentar en un momento.',
     ...(env.esProduccion ? {} : { detalleTecnico: err?.message }),

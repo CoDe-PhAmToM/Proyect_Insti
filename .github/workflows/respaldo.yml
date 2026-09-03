@@ -1,0 +1,72 @@
+# ============================================================
+# RESPALDO SEMANAL DE LA BASE
+#
+# El plan gratuito de Neon NO hace respaldos automáticos. Con datos
+# financieros reales de personas, dejar eso como tarea manual es
+# apostar a que alguien se acuerde todas las semanas durante meses.
+# No se acuerda nadie.
+#
+# Si la base se pierde, se pierde el piloto entero y con él el
+# capítulo de resultados: los movimientos del cuaderno digitalizado
+# no se pueden reconstruir.
+#
+# GitHub Actions es gratis para repositorios públicos y da 2.000
+# minutos al mes en privados. Este trabajo tarda menos de un minuto.
+#
+# CONFIGURAR UNA VEZ:
+#   Settings → Secrets and variables → Actions → New secret
+#   Nombre: DATABASE_URL     Valor: la cadena de conexión de Neon
+# ============================================================
+
+name: Respaldo semanal
+
+on:
+  schedule:
+    # Domingos a las 07:00 UTC = 03:00 en Bolivia, sin tráfico
+    - cron: '0 7 * * 0'
+  # También se puede disparar a mano desde la pestaña Actions
+  workflow_dispatch:
+
+jobs:
+  respaldar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Instalar cliente de PostgreSQL 17
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Volcar la base
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Falta el secreto DATABASE_URL. Configuralo en Settings → Secrets → Actions."
+            exit 1
+          fi
+          FECHA=$(date +%Y-%m-%d)
+          pg_dump "$DATABASE_URL" --no-owner --no-privileges > "respaldo-$FECHA.sql"
+          gzip "respaldo-$FECHA.sql"
+          echo "FECHA=$FECHA" >> $GITHUB_ENV
+          echo "Tamaño: $(du -h respaldo-$FECHA.sql.gz | cut -f1)"
+
+      - name: Guardar el archivo
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ env.FECHA }}
+          path: respaldo-*.sql.gz
+          # 90 días es el máximo del plan gratuito. Para el archivo
+          # definitivo del piloto, bajarlo y guardarlo aparte.
+          retention-days: 90
+
+      - name: Resumen
+        run: |
+          echo "### Respaldo del ${{ env.FECHA }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Se descarga desde la sección **Artifacts** de esta ejecución." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Contiene datos financieros reales de personas identificables." >> $GITHUB_STEP_SUMMARY
+          echo "Tratarlo con el mismo cuidado que los cuadernos originales." >> $GITHUB_STEP_SUMMARY

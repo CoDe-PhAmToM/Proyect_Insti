@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { AlertTriangle, RotateCw } from 'lucide-react';
+import { reportarError } from '../lib/reportarError';
 
 export class LimiteError extends React.Component {
   constructor(props) {
@@ -31,6 +32,7 @@ export class LimiteError extends React.Component {
   componentDidCatch(error, info) {
     // Queda en la consola para que el equipo lo pueda diagnosticar.
     console.error('[pantalla caída]', this.props.nombre ?? '', error, info?.componentStack);
+    reportarError(error, { ruta: this.props.nombre, tipo: 'pantalla' });
   }
 
   // Al cambiar de pantalla se limpia el error: si no, quedaría

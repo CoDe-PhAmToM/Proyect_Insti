@@ -14,7 +14,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Building2, Download, Loader2, KeyRound, ClipboardList, Gauge, Copy, Check, X,
+  Building2, Download, Loader2, KeyRound, ClipboardList, Gauge, Copy, Check, X, Bug,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { descargarArchivo } from '../lib/descargar';
@@ -27,6 +27,7 @@ const PESTANAS = [
   { id: 'uso',        label: 'Uso',          icon: Gauge },
   { id: 'lineabase',  label: 'Línea base',   icon: ClipboardList },
   { id: 'sus',        label: 'Usabilidad',   icon: Check },
+  { id: 'errores',    label: 'Fallas',       icon: Bug },
 ];
 
 export const Investigador = () => {
@@ -77,6 +78,7 @@ export const Investigador = () => {
       {pestana === 'uso' && <IndicadoresUso />}
       {pestana === 'lineabase' && <LineasBase />}
       {pestana === 'sus' && <ResultadosSus />}
+      {pestana === 'errores' && <Errores />}
 
       <ModalReseteo open={resetAbierto} onClose={() => setResetAbierto(false)} />
     </div>
@@ -640,6 +642,97 @@ const ResultadosSus = () => {
             ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// ── Fallas en producción ─────────────────────────────────────
+//
+// Sin esta pantalla, si algo falla en el celular de una
+// microempresaria el equipo no se entera nunca. Ella cree que hizo
+// algo mal, deja de usar el sistema, y el piloto pierde un caso.
+
+const Errores = () => {
+  const [datos, setDatos] = useState(null);
+  const [error, setError] = useState(null);
+  const [marcando, setMarcando] = useState(null);
+
+  const cargar = useCallback(() => {
+    api.get('/errores').then(setDatos).catch((e) => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const resolver = async (ids) => {
+    setMarcando(ids[0]);
+    try {
+      await api.post('/errores/resolver', { ids });
+      cargar();
+    } finally {
+      setMarcando(null);
+    }
+  };
+
+  if (error) return <ErrorCarga mensaje={error} onReintentar={cargar} />;
+  if (!datos) return <Cargando texto="Buscando fallas..." />;
+
+  if (datos.total === 0) {
+    return (
+      <div className="bg-white border border-stone-200 rounded-sm">
+        <SinDatos
+          titulo="Sin fallas registradas"
+          texto="Buena señal. Acá van a aparecer los errores que le pasen a cualquier usuario, para que el equipo se entere sin depender de que alguien avise."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-amber-50 border-2 border-amber-200 rounded-sm p-4 text-sm text-amber-900">
+        <strong>{datos.total} falla(s) sin revisar.</strong> Están agrupadas por mensaje: 40 veces
+        el mismo error es UN problema, no 40.
+      </div>
+
+      <div className="space-y-3">
+        {datos.agrupados.map((g) => (
+          <div key={g.mensaje} className="bg-white border border-stone-200 rounded-sm p-5">
+            <div className="flex flex-wrap gap-3 justify-between items-start">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-black px-2 py-0.5 rounded-sm bg-red-100 text-red-800">
+                    {g.veces} {g.veces === 1 ? 'vez' : 'veces'}
+                  </span>
+                  <span className="text-[11px] text-stone-500">
+                    último: {fechaCorta(g.ultimo)}
+                  </span>
+                </div>
+                <div className="font-mono text-sm text-stone-800 break-all">{g.mensaje}</div>
+                {g.rutas.length > 0 && (
+                  <div className="text-[11px] text-stone-500 mt-1">
+                    En: {g.rutas.join(', ')}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => resolver(g.ids)}
+                disabled={marcando === g.ids[0]}
+                className="flex items-center gap-1.5 border border-stone-300 px-3 py-2 text-xs font-bold rounded-sm hover:bg-stone-100 shrink-0 disabled:opacity-50"
+              >
+                {marcando === g.ids[0] ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Check size={13} />
+                )}
+                YA ESTÁ
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

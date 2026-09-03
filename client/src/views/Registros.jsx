@@ -13,7 +13,7 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Plus, TrendingUp, TrendingDown, AlertTriangle, Wallet, Trash2, X, Loader2,
+  Plus, TrendingUp, TrendingDown, AlertTriangle, Wallet, Trash2, X, Loader2, Ban,
 } from 'lucide-react';
 import { Modal, FormField, inputClass } from '../components/Modal';
 import { Cargando, ErrorCarga, SinDatos } from '../components/Layout';
@@ -22,6 +22,7 @@ import { useMateriales } from '../context/MaterialesContext';
 import { useAuth } from '../context/AuthContext';
 import { bs, fechaCorta, hoyISO } from 'shared/formato';
 import { cronometrar } from '../lib/bitacora';
+import { FiltroPeriodo } from '../components/FiltroPeriodo';
 
 const TIPOS = [
   { id: 'INGRESO', label: 'Entró plata', ayuda: 'Una venta, un pedido cobrado', color: 'green' },
@@ -43,7 +44,8 @@ const FORM_VACIO = {
 export const Registros = () => {
   const {
     registros, categorias, cargando, error, recargar,
-    agregarRegistro, eliminarRegistro,
+    agregarRegistro, eliminarRegistro, anularRegistro,
+    filtroFechas, setFiltroFechas,
     ingresos, egresos, retiros, mezclaPersonal, gananciaReal, gananciaSinMezcla,
   } = useRegistros();
   const { productos } = useMateriales();
@@ -56,6 +58,8 @@ export const Registros = () => {
   const [errorEnvio, setErrorEnvio] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [aEliminar, setAEliminar] = useState(null);
+  const [aAnular, setAAnular] = useState(null);
+  const [motivoAnular, setMotivoAnular] = useState('');
 
   const filtrados = useMemo(
     () =>
@@ -163,6 +167,8 @@ export const Registros = () => {
         </div>
       )}
 
+      <FiltroPeriodo valor={filtroFechas} onCambiar={setFiltroFechas} />
+
       {/* Totales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Tarjeta icono={TrendingUp} color="text-green-600" valor={bs(ingresos)} label="Entró" />
@@ -234,14 +240,21 @@ export const Registros = () => {
                   <tr
                     key={r.id}
                     className={`border-b border-stone-100 hover:bg-stone-50 ${
-                      r.tipo === 'RETIRO' ? 'bg-amber-50/40' : ''
+                      r.anuladoEn ? 'opacity-50' : r.tipo === 'RETIRO' ? 'bg-amber-50/40' : ''
                     }`}
                   >
                     <td className="px-5 py-3 text-stone-500 whitespace-nowrap">
                       {fechaCorta(r.fecha)}
                     </td>
                     <td className="px-5 py-3">
-                      <div className="font-semibold text-stone-800">{r.descripcion}</div>
+                      <div className={`font-semibold text-stone-800 ${r.anuladoEn ? 'line-through' : ''}`}>
+                        {r.descripcion}
+                      </div>
+                      {r.anuladoEn && (
+                        <div className="text-[11px] text-red-700 font-bold">
+                          ANULADO — {r.motivoAnulacion}
+                        </div>
+                      )}
                       {r.producto && (
                         <div className="text-[11px] text-stone-500">{r.producto.nombre}</div>
                       )}
@@ -261,11 +274,23 @@ export const Registros = () => {
                     >
                       {r.tipo === 'INGRESO' ? '+' : '−'} {bs(r.monto, { simbolo: false })}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      {!r.anuladoEn && (
+                        <button
+                          onClick={() => {
+                            setAAnular(r);
+                            setMotivoAnular('');
+                          }}
+                          className="p-1.5 text-stone-300 hover:text-amber-700 hover:bg-amber-50 rounded-sm"
+                          title="Anular (queda el registro)"
+                        >
+                          <Ban size={14} />
+                        </button>
+                      )}
                       <button
                         onClick={() => setAEliminar(r)}
                         className="p-1.5 text-stone-300 hover:text-red-600 hover:bg-red-50 rounded-sm"
-                        title="Borrar"
+                        title="Borrar (solo lo de hoy)"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -442,6 +467,54 @@ export const Registros = () => {
               ) : (
                 'GUARDAR'
               )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Anular: la forma correcta de corregir un error */}
+      <Modal
+        open={!!aAnular}
+        onClose={() => setAAnular(null)}
+        title="Anular este movimiento"
+        subtitulo="Corregir sin borrar"
+      >
+        <div className="space-y-4">
+          <div className="bg-stone-50 border border-stone-200 rounded-sm p-3 text-sm">
+            <div className="font-bold text-stone-900">{aAnular?.descripcion}</div>
+            <div className="text-stone-500">{bs(aAnular?.monto)}</div>
+          </div>
+
+          <p className="text-sm text-stone-600 leading-relaxed">
+            El movimiento deja de contar en tus totales, pero <strong>no se borra</strong>: queda
+            tachado en la lista con el motivo. Así siempre se puede ver qué pasó.
+          </p>
+
+          <FormField label="¿Por qué lo anulás?">
+            <input
+              value={motivoAnular}
+              onChange={(e) => setMotivoAnular(e.target.value)}
+              placeholder="Me equivoqué en el monto"
+              className={inputClass}
+            />
+          </FormField>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setAAnular(null)}
+              className="flex-1 py-2.5 border-2 border-stone-200 rounded-sm text-sm font-bold"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={async () => {
+                await anularRegistro(aAnular.id, motivoAnular);
+                setAAnular(null);
+              }}
+              disabled={motivoAnular.trim().length < 3}
+              className="flex-1 py-2.5 bg-amber-600 text-white rounded-sm text-sm font-black hover:bg-amber-700 disabled:opacity-50"
+            >
+              ANULAR
             </button>
           </div>
         </div>

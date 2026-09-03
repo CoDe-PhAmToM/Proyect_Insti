@@ -16,6 +16,7 @@ import {
   Plus, Pencil, Trash2, AlertTriangle, ArrowDownUp, History, Loader2, X,
 } from 'lucide-react';
 import { Modal, FormField, inputClass } from '../components/Modal';
+import { BotonPlantillas } from '../components/Plantillas';
 import { Cargando, ErrorCarga, SinDatos } from '../components/Layout';
 import { useMateriales } from '../context/MaterialesContext';
 import { useOrdenes } from '../context/OrdenesContext';
@@ -650,7 +651,8 @@ export const Costeo = () => {
     return (
       <SinDatos
         titulo="Todavía no cargaste prendas"
-        texto="Para saber cuánto te cuesta hacer una prenda, primero cargá el producto y su receta de materiales."
+        texto="Para saber cuánto te cuesta una prenda hace falta su receta: cuánta tela, cuánto hilo. Podés arrancar de una plantilla y ajustarla a tu forma de cortar."
+        accion={<BotonPlantillas onUsada={recargar} />}
       />
     );
   }
@@ -662,6 +664,9 @@ export const Costeo = () => {
   return (
     <div className="p-4 sm:p-8 space-y-5">
       <div className="flex items-center gap-2 flex-wrap">
+        <div className="w-full sm:w-auto sm:order-last sm:ml-auto">
+          <BotonPlantillas onUsada={recargar} />
+        </div>
         {productos.map((p) => (
           <button
             key={p.id}

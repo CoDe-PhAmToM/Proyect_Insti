@@ -91,6 +91,19 @@ export const RegistrosProvider = ({ children }) => {
     [cargar]
   );
 
+  // Anular no es borrar: la fila queda, tachada y con el motivo.
+  // En contabilidad el rastro no se borra — y en una tesis, si los
+  // registros se pudieran editar, cualquier numero del capitulo de
+  // resultados seria cuestionable.
+  const anularRegistro = useCallback(
+    async (id, motivo) => {
+      const r = await api.post(`/registros/${id}/anular`, { motivo });
+      await cargar();
+      return r;
+    },
+    [cargar]
+  );
+
   const buscarDuplicado = useCallback(
     (datos) => api.get('/registros/posible-duplicado', datos).then((d) => d.duplicado),
     []
@@ -110,6 +123,7 @@ export const RegistrosProvider = ({ children }) => {
         setFiltroFechas,
         agregarRegistro,
         eliminarRegistro,
+        anularRegistro,
         buscarDuplicado,
         descartarAlerta,
         recargar: cargar,

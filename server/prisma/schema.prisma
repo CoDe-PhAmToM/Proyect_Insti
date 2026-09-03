@@ -112,6 +112,8 @@ model Usuario {
   codigosReseteo  CodigoReseteo[]
   respuestasSus   RespuestaSus[]
   registros       Registro[]      @relation("RegistroCreadoPor")
+  registrosAnulados Registro[]    @relation("RegistroAnuladoPor")
+  erroresReportados ErrorApp[]
   pedidos         Pedido[]        @relation("PedidosDelCliente")
   eventos         EventoUso[]
 
@@ -443,6 +445,12 @@ model Registro {
   // Marca los registros cargados como linea base desde el cuaderno,
   // para poder excluirlos del uso "real" de la plataforma.
   esLineaBase    Boolean        @default(false)
+  // Un movimiento mal cargado se ANULA, no se edita ni se borra.
+  // En contabilidad el rastro no se borra: queda la fila original
+  // marcada y con el motivo, para que se pueda auditar que paso.
+  anuladoEn      DateTime?
+  anuladoPorId   String?
+  motivoAnulacion String?
   creadoEn       DateTime       @default(now())
   actualizadoEn  DateTime       @updatedAt
 
@@ -451,6 +459,7 @@ model Registro {
   producto  Producto?        @relation(fields: [productoId], references: [id])
   orden     OrdenProduccion? @relation(fields: [ordenId], references: [id])
   creadoPor Usuario          @relation("RegistroCreadoPor", fields: [creadoPorId], references: [id])
+  anuladoPor Usuario?        @relation("RegistroAnuladoPor", fields: [anuladoPorId], references: [id])
 
   @@index([tallerId, fecha])
   @@index([tallerId, tipo])
@@ -588,6 +597,30 @@ model RespuestaSus {
 
   @@unique([usuarioId])
   @@map("respuestas_sus")
+}
+
+// Si algo falla en el celular de una microempresaria del Distrito
+// 6, sin esto el equipo no se entera NUNCA. Ella cree que hizo algo
+// mal, deja de usar el sistema, y el piloto pierde un caso sin que
+// nadie sepa por que.
+model ErrorApp {
+  id         String   @id @default(uuid())
+  origen     String // cliente | servidor
+  mensaje    String
+  pila       String?
+  ruta       String?
+  usuarioId  String?
+  tallerId   String?
+  navegador  String?
+  metadata   Json?
+  resuelto   Boolean  @default(false)
+  creadoEn   DateTime @default(now())
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([creadoEn])
+  @@index([resuelto])
+  @@map("errores_app")
 }
 
 model Recomendacion {
