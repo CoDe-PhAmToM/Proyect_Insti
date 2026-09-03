@@ -25,6 +25,7 @@
 import { prisma } from '../lib/prisma.js';
 import { errores } from '../lib/errores.js';
 import { consumirParaOrden, registrarMovimiento } from './kardex.js';
+import { ingresarProduccion } from './stockProducto.js';
 import { costearOrden, cifUnitario, costosFijosDelPeriodo } from 'shared/costeo';
 
 const dec = (v) => Number(v ?? 0);
@@ -256,11 +257,18 @@ const terminarProduccion = async (orden, tallerId, cantidadProducida) => {
       });
     }
 
-    return tx.ordenProduccion.update({
+    const terminada = await tx.ordenProduccion.update({
       where: { id: orden.id },
       data: { estado: 'TERMINADA', cantidadProducida: producidas },
       include: { detalles: { include: { producto: true } }, costos: true },
     });
+
+    // Las prendas que salieron bien entran al stock de producto
+    // terminado. Hasta ahora se producian y no aparecian en ningun
+    // lado: el sistema sabia cuanto costaron pero no que existian.
+    await ingresarProduccion({ tallerId, orden: terminada, tx });
+
+    return terminada;
   });
 };
 

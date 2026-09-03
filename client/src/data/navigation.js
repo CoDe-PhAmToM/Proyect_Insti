@@ -11,7 +11,7 @@
 
 import {
   Activity, Layers, Target, Sparkles, FileBarChart2,
-  ShoppingBag, Zap, BookOpen, ClipboardList, Inbox, Package,
+  ShoppingBag, Zap, BookOpen, ClipboardList, Inbox, Package, Users, Microscope, MessageSquareHeart,
 } from 'lucide-react';
 
 export const ROLES = {
@@ -30,6 +30,9 @@ export const NAV_ITEMS = [
   { soloDueno: true, id: 'reportes',     label: 'Reportes',          icon: FileBarChart2, grupo: 'contabilidad',  rol: 'productor', titulo: 'Reportes contables',    subtitulo: 'Plantillas de Contaduría'   },
   { soloDueno: true, id: 'ia',           label: 'Recomendaciones',   icon: Sparkles,      grupo: 'inteligencia',  rol: 'productor', titulo: 'Recomendaciones',       subtitulo: 'Análisis de tus datos'      },
   { soloDueno: true, id: 'pedidos',      label: 'Pedidos',           icon: Inbox,         grupo: 'tienda',        rol: 'productor', titulo: 'Pedidos de la tienda',  subtitulo: 'Lo que te encargaron'       },
+  { soloDueno: true, id: 'equipo',       label: 'Mi equipo',         icon: Users,         grupo: 'taller',        rol: 'productor', titulo: 'Equipo del taller',     subtitulo: 'Quiénes trabajan acá'       },
+  { id: 'usabilidad',   label: '¿Qué te pareció?',  icon: MessageSquareHeart, grupo: 'taller',   rol: 'productor', titulo: 'Cuestionario de usabilidad', subtitulo: '10 preguntas, 3 minutos' },
+  { id: 'investigador', label: 'Panel del piloto',  icon: Microscope,    grupo: 'principal',     rol: 'admin',     titulo: 'Panel del piloto',      subtitulo: 'Equipo investigador'        },
   { id: 'catalogo',     label: 'Catálogo',          icon: ShoppingBag,   grupo: 'tienda',        rol: 'cliente',   titulo: 'Catálogo público',      subtitulo: 'Tienda online'              },
   { id: 'mispedidos',   label: 'Mis pedidos',       icon: Package,       grupo: 'tienda',        rol: 'cliente',   titulo: 'Mis pedidos',           subtitulo: 'Lo que encargaste'          },
   { id: 'personalizar', label: 'Personalizar',      icon: Zap,           grupo: 'tienda',        rol: 'cliente',   titulo: 'Personalizador',        subtitulo: 'Editor 2D'                  },
@@ -41,6 +44,7 @@ export const GRUPOS = [
   { key: 'contabilidad', label: 'Contabilidad' },
   { key: 'inteligencia', label: 'Inteligencia' },
   { key: 'tienda',       label: 'Tienda'       },
+  { key: 'taller',       label: 'Mi taller'    },
 ];
 
 /**
@@ -63,7 +67,8 @@ export const itemsPorRol = (rol, rolUsuario) =>
   });
 
 // Vista de entrada por defecto al cambiar de rol
-export const vistaInicial = (rol) => (rol === 'productor' ? 'dashboard' : 'catalogo');
+export const vistaInicial = (rol) =>
+  rol === 'admin' ? 'investigador' : rol === 'productor' ? 'dashboard' : 'catalogo';
 
 /** Verdadero si ese rol tiene permitida esa pantalla. */
 export const puedeVer = (vistaId, rolUsuario) => {

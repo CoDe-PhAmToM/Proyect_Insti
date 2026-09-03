@@ -19,6 +19,7 @@ import { autenticar } from '../middleware/auth.js';
 import { conTaller, exigirTaller, scope } from '../middleware/tenancy.js';
 import { validar } from './materiales.js';
 import { resultadoPeriodo } from 'shared/costeo';
+import { moverStockProducto } from '../services/stockProducto.js';
 
 export const rutasRegistros = Router();
 
@@ -149,6 +150,23 @@ rutasRegistros.post('/', async (req, res) => {
     },
     include: { categoria: true, producto: { select: { id: true, nombre: true, sku: true } } },
   });
+
+  // Si la venta indica prenda y cantidad, sale del stock: el
+  // sistema tiene que saber que esas prendas ya no estan.
+  if (datos.tipo === 'INGRESO' && datos.productoId && datos.cantidad > 0) {
+    await moverStockProducto({
+      tallerId: req.tallerId,
+      productoId: datos.productoId,
+      tipo: 'SALIDA',
+      cantidad: datos.cantidad,
+      motivo: `Venta: ${datos.descripcion}`,
+      registroId: registro.id,
+      fecha: registro.fecha,
+    }).catch(() => {
+      // Si falla el movimiento de stock no se cae la venta: el
+      // registro financiero es lo que no se puede perder.
+    });
+  }
 
   // Alertas automaticas: la operativizacion de la tesis las cuenta
   // como indicador, asi que quedan registradas, no solo mostradas.

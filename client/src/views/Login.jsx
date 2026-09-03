@@ -9,7 +9,8 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, Loader2, KeyRound, Check } from 'lucide-react';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const input =
@@ -18,7 +19,9 @@ const input =
 export const Login = () => {
   const { entrar, registrarse } = useAuth();
 
-  const [modo, setModo] = useState('entrar'); // entrar | crear
+  const [modo, setModo] = useState('entrar'); // entrar | crear | recuperar
+  const [codigo, setCodigo] = useState('');
+  const [recuperado, setRecuperado] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', nombre: '', nombreTaller: '' });
   const [verClave, setVerClave] = useState(false);
   const [error, setError] = useState(null);
@@ -34,7 +37,17 @@ export const Login = () => {
     setEnviando(true);
     try {
       if (modo === 'entrar') await entrar(form.email, form.password);
-      else await registrarse(form);
+      else if (modo === 'recuperar') {
+        await api.post('/reseteo/usar', {
+          email: form.email,
+          codigo,
+          password: form.password,
+        });
+        setRecuperado(true);
+        setModo('entrar');
+        setForm((f) => ({ ...f, password: '' }));
+        setCodigo('');
+      } else await registrarse(form);
     } catch (err) {
       setError(err.message);
       setDetalles(err.detalles ?? {});
@@ -64,14 +77,27 @@ export const Login = () => {
         <form onSubmit={enviar} className="bg-white rounded-sm p-7 space-y-5">
           <div>
             <h1 className="text-2xl font-black tracking-tight text-stone-900">
-              {modo === 'entrar' ? 'Entrá a tu taller' : 'Creá tu cuenta'}
+              {modo === 'entrar'
+                ? 'Entrá a tu taller'
+                : modo === 'recuperar'
+                  ? 'Poner una clave nueva'
+                  : 'Creá tu cuenta'}
             </h1>
             <p className="text-sm text-stone-500 mt-1">
               {modo === 'entrar'
                 ? 'Poné tu correo y tu contraseña.'
-                : 'Es gratis y toma un minuto.'}
+                : modo === 'recuperar'
+                  ? 'Pedile el código al equipo y escribilo acá.'
+                  : 'Es gratis y toma un minuto.'}
             </p>
           </div>
+
+          {recuperado && (
+            <div className="bg-green-50 border-2 border-green-300 text-green-900 text-sm rounded-sm p-3 flex items-start gap-2">
+              <Check size={15} className="mt-0.5 shrink-0" />
+              Listo. Ya podés entrar con tu contraseña nueva.
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 border-2 border-red-200 text-red-800 text-sm rounded-sm p-3">
@@ -113,7 +139,22 @@ export const Login = () => {
             />
           </Campo>
 
-          <Campo label="Contraseña" error={detalles.password}>
+          {modo === 'recuperar' && (
+            <Campo label="Código que te dieron" error={detalles.codigo}>
+              <input
+                className={`${input} text-center text-2xl font-black tracking-[0.3em]`}
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+              />
+              <p className="text-xs text-stone-500 mt-1">
+                Son 6 números y duran 30 minutos.
+              </p>
+            </Campo>
+          )}
+
+          <Campo label={modo === 'recuperar' ? 'Tu contraseña nueva' : 'Contraseña'} error={detalles.password}>
             <div className="relative">
               <input
                 className={`${input} pr-12`}
@@ -146,6 +187,10 @@ export const Login = () => {
               <>
                 <LogIn size={16} /> ENTRAR
               </>
+            ) : modo === 'recuperar' ? (
+              <>
+                <KeyRound size={16} /> GUARDAR CONTRASEÑA
+              </>
             ) : (
               <>
                 <UserPlus size={16} /> CREAR MI CUENTA
@@ -153,17 +198,35 @@ export const Login = () => {
             )}
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setModo((m) => (m === 'entrar' ? 'crear' : 'entrar'));
-              setError(null);
-              setDetalles({});
-            }}
-            className="w-full text-sm text-stone-600 hover:text-stone-900 underline"
-          >
-            {modo === 'entrar' ? '¿No tenés cuenta? Creá una' : 'Ya tengo cuenta, quiero entrar'}
-          </button>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                setModo((m) => (m === 'entrar' ? 'crear' : 'entrar'));
+                setError(null);
+                setDetalles({});
+                setRecuperado(false);
+              }}
+              className="w-full text-sm text-stone-600 hover:text-stone-900 underline"
+            >
+              {modo === 'entrar' ? '¿No tenés cuenta? Creá una' : 'Ya tengo cuenta, quiero entrar'}
+            </button>
+
+            {modo !== 'recuperar' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setModo('recuperar');
+                  setError(null);
+                  setDetalles({});
+                  setRecuperado(false);
+                }}
+                className="w-full text-xs text-stone-500 hover:text-stone-800 underline"
+              >
+                Olvidé mi contraseña
+              </button>
+            )}
+          </div>
         </form>
 
         <p className="text-[11px] text-stone-600 text-center mt-5 leading-relaxed">

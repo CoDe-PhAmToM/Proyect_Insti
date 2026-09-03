@@ -19,6 +19,9 @@ import { Registros }                from './views/Registros';
 import { Materiales, Costeo }       from './views/MaterialesCosteo';
 import { Ordenes }                  from './views/Ordenes';
 import { PedidosTaller, MisPedidos } from './views/Pedidos';
+import { Equipo }                   from './views/Equipo';
+import { Usabilidad }               from './views/Usabilidad';
+import { Investigador }             from './views/Investigador';
 import { Reportes }                 from './views/Reportes';
 import { InteligenciaIA }           from './views/InteligenciaIA';
 import { Catalogo, Personalizador } from './views/CatalogoPersonalizar';
@@ -49,9 +52,9 @@ const Cargando = () => (
 
 // ── Contenido con sesión activa ──────────────────────────────
 const AppConSesion = () => {
-  const { usuario, salir, esCliente } = useAuth();
+  const { usuario, salir, esCliente, esAdmin } = useAuth();
 
-  const rolVista = esCliente ? 'cliente' : 'productor';
+  const rolVista = esAdmin ? 'admin' : esCliente ? 'cliente' : 'productor';
   const [vista, setVista] = useState(vistaInicial(rolVista));
   const [menuAbierto, setMenuAbierto] = useState(false);
 
@@ -98,6 +101,9 @@ const AppConSesion = () => {
           {vista === 'reportes'     && <Reportes />}
           {vista === 'ia'           && <InteligenciaIA />}
           {vista === 'pedidos'      && <PedidosTaller />}
+          {vista === 'equipo'       && <Equipo />}
+          {vista === 'usabilidad'   && <Usabilidad />}
+          {vista === 'investigador' && <Investigador />}
           {vista === 'mispedidos'   && <MisPedidos />}
           {vista === 'catalogo'     && <Catalogo setVista={setVista} />}
           {vista === 'personalizar' && <Personalizador />}

@@ -58,13 +58,22 @@ rutasTienda.get('/productos', async (req, res) => {
     where: { publicadoEnTienda: true, activo: true, ...(tallerId ? { tallerId } : {}) },
     select: {
       id: true, sku: true, nombre: true, descripcion: true, categoria: true,
-      emoji: true, imagenUrl: true, precioVenta: true,
+      emoji: true, imagenUrl: true, precioVenta: true, stock: true,
       taller: { select: { id: true, nombre: true } },
     },
     orderBy: { nombre: 'asc' },
   });
 
-  const lista = productos.map((p) => ({ ...p, precioVenta: dec(p.precioVenta) }));
+  const lista = productos.map((p) => ({
+    ...p,
+    precioVenta: dec(p.precioVenta),
+    // Se muestra la disponibilidad real. No se bloquea comprar mas:
+    // un taller a pedido produce lo que le encargan, y trabar la
+    // venta seria peor que avisar. Pero el cliente tiene que saber
+    // si se lleva algo hecho o si hay que fabricarlo.
+    disponibilidad: p.stock > 0 ? 'listo' : 'a-pedido',
+    listasParaLlevar: Math.max(0, p.stock),
+  }));
 
   res.json({
     productos: lista,
@@ -115,6 +124,19 @@ rutasPedidos.post('/', permitir('CLIENTE'), async (req, res) => {
 
   if (productos.length !== ids.length) {
     throw errores.datosInvalidos('Alguna de las prendas ya no está disponible en ese taller');
+  }
+
+  // Tope por pedido. Antes se podian encargar 500 poleras a un
+  // taller que tiene 3, y el sistema lo aceptaba sin decir nada.
+  // No se limita al stock (se produce a pedido) pero si a algo que
+  // un taller chico pueda cumplir.
+  const TOPE_POR_PRENDA = 100;
+  const excedida = datos.items.find((i) => i.cantidad > TOPE_POR_PRENDA);
+  if (excedida) {
+    const p = productos.find((x) => x.id === excedida.productoId);
+    throw errores.datosInvalidos(
+      `${excedida.cantidad} unidades de "${p.nombre}" es mucho para un pedido. El máximo son ${TOPE_POR_PRENDA}. Para encargos más grandes, contactá al taller directamente.`
+    );
   }
 
   // Los estampados se validan antes de abrir la transacción

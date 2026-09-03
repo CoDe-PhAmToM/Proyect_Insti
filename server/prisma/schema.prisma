@@ -98,6 +98,8 @@ model Usuario {
   talleresPropios Taller[]        @relation("PropietarioTaller")
   membresias      UsuarioTaller[]
   refreshTokens   RefreshToken[]
+  codigosReseteo  CodigoReseteo[]
+  respuestasSus   RespuestaSus[]
   registros       Registro[]      @relation("RegistroCreadoPor")
   pedidos         Pedido[]        @relation("PedidosDelCliente")
   eventos         EventoUso[]
@@ -133,6 +135,7 @@ model Taller {
   recomendaciones Recomendacion[]
   lineasBase    LineaBase[]
   eventos       EventoUso[]
+  respuestasSus RespuestaSus[]
 
   @@index([propietarioId])
   @@map("talleres")
@@ -151,6 +154,25 @@ model UsuarioTaller {
   @@unique([usuarioId, tallerId])
   @@index([tallerId])
   @@map("usuarios_talleres")
+}
+
+// El admin emite un codigo de un solo uso y se lo dicta a la
+// persona por telefono. Sin correo: muchos microempresarios no
+// tienen uno activo, y sin esto una clave olvidada saca a un taller
+// del piloto entero.
+model CodigoReseteo {
+  id        String    @id @default(uuid())
+  usuarioId String
+  codigoHash String   @unique
+  expiraEn  DateTime
+  usadoEn   DateTime?
+  emitidoPor String
+  creadoEn  DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("codigos_reseteo")
 }
 
 model RefreshToken {
@@ -228,6 +250,12 @@ model Producto {
   precioVenta       Decimal  @db.Decimal(12, 2)
   // Mano de obra directa estimada por unidad, en Bs
   manoObraUnitaria  Decimal  @default(0) @db.Decimal(12, 2)
+  // Prendas YA HECHAS y listas para vender. Distinto del inventario
+  // de materiales: una cosa es tener tela, otra tener poleras.
+  // Sin esto la tienda vendia infinito y la recomendacion de
+  // "producto sin rotacion" hablaba de un stock que no existia.
+  stock             Int      @default(0)
+  stockMinimo       Int      @default(0)
   imagenUrl         String?
   emoji             String?
   categoria         String?
@@ -241,6 +269,7 @@ model Producto {
   detalles OrdenDetalle[]
   items   PedidoItem[]
   registros Registro[]
+  movimientos MovimientoProducto[]
 
   @@unique([tallerId, sku])
   @@index([tallerId])
@@ -258,6 +287,27 @@ model ProductoMaterial {
 
   @@unique([productoId, materialId])
   @@map("producto_materiales")
+}
+
+// Kardex de prendas terminadas: entra lo que se produce, sale lo
+// que se vende. Permite responder "cuantas poleras tengo hoy" y
+// sostener la recomendacion de rotacion con datos reales.
+model MovimientoProducto {
+  id            String          @id @default(uuid())
+  productoId    String
+  tipo          TipoMovMaterial
+  cantidad      Int
+  saldo         Int
+  ordenId       String?
+  registroId    String?
+  motivo        String?
+  fecha         DateTime        @db.Date
+  creadoEn      DateTime        @default(now())
+
+  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@index([productoId, fecha])
+  @@map("movimientos_producto")
 }
 
 // ── Costos fijos: sin esta tabla no existe punto de equilibrio ──
@@ -497,6 +547,26 @@ model LineaBase {
 
   @@unique([tallerId, periodo])
   @@map("lineas_base")
+}
+
+// Escala SUS (System Usability Scale), 10 items estandar. El
+// documento la promete como instrumento de la Fase II y hasta ahora
+// no existia en ningun lado.
+model RespuestaSus {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  tallerId   String?
+  // Las 10 respuestas, de 1 a 5, en orden
+  respuestas Int[]
+  puntaje    Decimal  @db.Decimal(5, 2)
+  comentario String?
+  creadoEn   DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  taller  Taller? @relation(fields: [tallerId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId])
+  @@map("respuestas_sus")
 }
 
 model Recomendacion {
