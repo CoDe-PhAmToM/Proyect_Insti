@@ -28,6 +28,7 @@ import { rutasTienda, rutasPedidos } from './routes/tienda.js';
 import { rutasMiembros } from './routes/miembros.js';
 import { rutasReseteo } from './routes/reseteo.js';
 import { rutasSus } from './routes/sus.js';
+import { rutasTaller } from './routes/taller.js';
 import { rutasEventos, rutasLineaBase, rutasAdmin } from './routes/medicion.js';
 import { noEncontrado, manejadorErrores } from './middleware/errores.js';
 
@@ -96,6 +97,7 @@ app.use('/api/v1/pedidos', rutasPedidos);
 app.use('/api/v1/miembros', rutasMiembros);
 app.use('/api/v1/reseteo', rutasReseteo);
 app.use('/api/v1/sus', rutasSus);
+app.use('/api/v1/taller', rutasTaller);
 app.use('/api/v1/eventos', rutasEventos);
 app.use('/api/v1/linea-base', rutasLineaBase);
 app.use('/api/v1/admin', rutasAdmin);

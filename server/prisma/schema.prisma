@@ -59,6 +59,17 @@ enum TipoCostoOrden {
   CIF
 }
 
+// El pago se coordina con QR Simple del BCB, que es el estandar
+// interoperable boliviano: todas las apps bancarias lo leen. No hay
+// pasarela — exigiria NIT y cuenta empresarial, y la poblacion del
+// estudio es informal por definicion.
+enum EstadoPago {
+  PENDIENTE
+  COMPROBANTE_SUBIDO
+  CONFIRMADO
+  RECHAZADO
+}
+
 enum EstadoPedido {
   NUEVO
   CONFIRMADO
@@ -116,6 +127,11 @@ model Taller {
   direccion     String?
   telefono      String?
   moneda        String   @default("BOB")
+  // QR Simple del banco del taller. Lo sube una vez y el sistema se
+  // lo muestra al cliente con el monto al cerrar el pedido.
+  qrUrl         String?
+  qrTitular     String?
+  qrBanco       String?
   activo        Boolean  @default(true)
   // Marca si el taller participa del piloto de validacion (objetivo 5)
   enPiloto      Boolean  @default(false)
@@ -454,6 +470,11 @@ model Pedido {
   direccionEntrega String?
   telefonoContacto String?
   notas            String?
+  estadoPago       EstadoPago @default(PENDIENTE)
+  // Captura del comprobante de transferencia que sube el cliente
+  comprobanteUrl   String?
+  pagadoEn         DateTime?
+  notaPago         String?
   creadoEn         DateTime     @default(now())
   actualizadoEn    DateTime     @updatedAt
 

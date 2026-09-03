@@ -193,6 +193,92 @@ rutasPedidos.post('/', permitir('CLIENTE'), async (req, res) => {
   });
 });
 
+// ── GET /:id/pago — el QR para pagar ─────────────────────────
+// QR Simple del BCB: el estandar interoperable boliviano, que todas
+// las apps bancarias leen. Sin pasarela — exigiria NIT y cuenta
+// empresarial, y la poblacion del estudio es informal por
+// definicion. Pedirle NIT excluiria justo a quien queremos ayudar.
+
+rutasPedidos.get('/:id/pago', async (req, res) => {
+  const pedido = await prisma.pedido.findFirst({
+    where: {
+      id: req.params.id,
+      ...(req.usuario.rol === 'CLIENTE' ? { clienteId: req.usuario.usuarioId } : {}),
+    },
+    include: { taller: { select: { nombre: true, qrUrl: true, qrTitular: true, qrBanco: true, telefono: true } } },
+  });
+  if (!pedido) throw errores.noEncontrado('El pedido');
+
+  res.json({
+    numero: pedido.numero,
+    total: dec(pedido.total),
+    estadoPago: pedido.estadoPago,
+    comprobanteUrl: pedido.comprobanteUrl,
+    taller: pedido.taller,
+    hayQr: Boolean(pedido.taller.qrUrl),
+    aviso: pedido.taller.qrUrl
+      ? null
+      : 'Este taller todavía no cargó su QR. Coordiná el pago por WhatsApp.',
+  });
+});
+
+// ── POST /:id/comprobante — el cliente sube la captura ───────
+
+rutasPedidos.post('/:id/comprobante', permitir('CLIENTE'), async (req, res) => {
+  const pedido = await prisma.pedido.findFirst({
+    where: { id: req.params.id, clienteId: req.usuario.usuarioId },
+  });
+  if (!pedido) throw errores.noEncontrado('El pedido');
+  if (pedido.estadoPago === 'CONFIRMADO') {
+    throw errores.conflicto('Este pedido ya está pagado');
+  }
+
+  const { comprobante, nota } = req.body ?? {};
+  const url = await guardarEstampado(comprobante);
+  if (!url) throw errores.datosInvalidos('Falta la captura del comprobante');
+
+  await prisma.pedido.update({
+    where: { id: pedido.id },
+    data: {
+      comprobanteUrl: url,
+      estadoPago: 'COMPROBANTE_SUBIDO',
+      notaPago: typeof nota === 'string' ? nota.slice(0, 300) : null,
+    },
+  });
+
+  res.json({
+    ok: true,
+    mensaje: 'Listo. El taller va a revisar el comprobante y te confirma.',
+  });
+});
+
+// ── POST /:id/confirmar-pago — el taller da el visto bueno ───
+
+rutasPedidos.post('/:id/confirmar-pago', conTaller, exigirTaller, async (req, res) => {
+  const pedido = await prisma.pedido.findFirst({
+    where: { id: req.params.id, ...scope(req) },
+  });
+  if (!pedido) throw errores.noEncontrado('El pedido');
+
+  const aprueba = req.body?.aprueba !== false;
+
+  await prisma.pedido.update({
+    where: { id: pedido.id },
+    data: {
+      estadoPago: aprueba ? 'CONFIRMADO' : 'RECHAZADO',
+      pagadoEn: aprueba ? new Date() : null,
+      notaPago: req.body?.nota?.slice(0, 300) ?? pedido.notaPago,
+    },
+  });
+
+  res.json({
+    ok: true,
+    mensaje: aprueba
+      ? 'Pago confirmado. Cuando entregues el pedido se registra el ingreso.'
+      : 'Marcaste el pago como rechazado. Avisale al cliente qué pasó.',
+  });
+});
+
 // ── GET /mios — pedidos del cliente ──────────────────────────
 
 rutasPedidos.get('/mios', permitir('CLIENTE'), async (req, res) => {
@@ -200,7 +286,7 @@ rutasPedidos.get('/mios', permitir('CLIENTE'), async (req, res) => {
     where: { clienteId: req.usuario.usuarioId },
     orderBy: { creadoEn: 'desc' },
     include: {
-      taller: { select: { nombre: true, telefono: true } },
+      taller: { select: { nombre: true, telefono: true, qrUrl: true } },
       items: { include: { producto: { select: { nombre: true } } } },
     },
   });

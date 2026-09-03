@@ -12,11 +12,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Inbox, Check, X, Package, Loader2, ArrowRight, Clock,
+  Inbox, Check, X, Package, Loader2, ArrowRight, Clock, QrCode, Eye,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { Cargando, ErrorCarga, SinDatos } from '../components/Layout';
 import { bs, fechaCorta } from 'shared/formato';
+import { ModalPago, ModalMiQR, EtiquetaPago } from '../components/PagoQR';
+import { Modal } from '../components/Modal';
 
 const ESTADO = {
   NUEVO:         { label: 'Nuevo',          clase: 'bg-orange-100 text-orange-800' },
@@ -37,6 +39,8 @@ export const PedidosTaller = () => {
   const [error, setError] = useState(null);
   const [ocupado, setOcupado] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [qrAbierto, setQrAbierto] = useState(false);
+  const [comprobante, setComprobante] = useState(null);
 
   const cargar = useCallback(async () => {
     setError(null);
@@ -83,10 +87,18 @@ export const PedidosTaller = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Mini titulo="Nuevos" valor={resumen.nuevos} color="text-orange-700" />
-        <Mini titulo="Haciéndose" valor={resumen.enProduccion} color="text-blue-700" />
-        <Mini titulo="Total" valor={resumen.total} />
+      <div className="flex flex-wrap gap-3 justify-between items-center">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 flex-1 min-w-[16rem]">
+          <Mini titulo="Nuevos" valor={resumen.nuevos} color="text-orange-700" />
+          <Mini titulo="Haciéndose" valor={resumen.enProduccion} color="text-blue-700" />
+          <Mini titulo="Total" valor={resumen.total} />
+        </div>
+        <button
+          onClick={() => setQrAbierto(true)}
+          className="flex items-center gap-1.5 border-2 border-stone-300 px-4 py-2.5 text-xs font-bold rounded-sm hover:bg-stone-100 shrink-0"
+        >
+          <QrCode size={14} /> MI QR DE COBRO
+        </button>
       </div>
 
       {pedidos.length === 0 ? (
@@ -107,6 +119,7 @@ export const PedidosTaller = () => {
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-sm ${ESTADO[p.estado].clase}`}>
                       {ESTADO[p.estado].label}
                     </span>
+                    <EtiquetaPago estado={p.estadoPago} />
                     {p.orden && (
                       <span className="text-[11px] text-stone-500">
                         → orden N° {p.orden.numero}
@@ -157,6 +170,15 @@ export const PedidosTaller = () => {
 
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <div className="text-xl font-black tabular-nums">{bs(p.total)}</div>
+
+                  {p.comprobanteUrl && p.estadoPago === 'COMPROBANTE_SUBIDO' && (
+                    <button
+                      onClick={() => setComprobante(p)}
+                      className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-2 text-xs font-black rounded-sm hover:bg-blue-700"
+                    >
+                      <Eye size={13} /> VER COMPROBANTE
+                    </button>
+                  )}
 
                   {p.estado === 'NUEVO' && (
                     <div className="flex gap-2">
@@ -209,6 +231,64 @@ export const PedidosTaller = () => {
           ))}
         </div>
       )}
+
+      <ModalMiQR open={qrAbierto} onClose={() => setQrAbierto(false)} onGuardado={cargar} />
+
+      {/* Revisar el comprobante que subió el cliente */}
+      <Modal
+        open={!!comprobante}
+        onClose={() => setComprobante(null)}
+        title="Comprobante de pago"
+        subtitulo={comprobante ? `Pedido N° ${comprobante.numero}` : ''}
+      >
+        {comprobante && (
+          <div className="space-y-4">
+            <div className="bg-stone-50 border border-stone-200 rounded-sm p-3 flex justify-between text-sm">
+              <span className="text-stone-600">Debería decir</span>
+              <span className="font-black">{bs(comprobante.total)}</span>
+            </div>
+
+            <img
+              src={comprobante.comprobanteUrl}
+              alt="Comprobante"
+              className="w-full rounded-sm border border-stone-200"
+            />
+
+            {comprobante.notaPago && (
+              <div className="text-sm text-stone-600 italic">{comprobante.notaPago}</div>
+            )}
+
+            <p className="text-xs text-stone-500">
+              Verificá en tu app del banco que la plata haya entrado antes de confirmar. El sistema
+              no se conecta a tu cuenta.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  await api.post(`/pedidos/${comprobante.id}/confirmar-pago`, { aprueba: false });
+                  setComprobante(null);
+                  cargar();
+                }}
+                className="flex-1 py-3 border-2 border-stone-200 rounded-sm text-sm font-bold text-stone-600"
+              >
+                No me llegó
+              </button>
+              <button
+                onClick={async () => {
+                  const r = await api.post(`/pedidos/${comprobante.id}/confirmar-pago`, { aprueba: true });
+                  setAviso(r.mensaje);
+                  setComprobante(null);
+                  cargar();
+                }}
+                className="flex-1 py-3 bg-green-700 text-white rounded-sm text-sm font-black hover:bg-green-800"
+              >
+                SÍ, ME LLEGÓ
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
@@ -221,14 +301,19 @@ export const MisPedidos = () => {
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [pagando, setPagando] = useState(null);
 
-  useEffect(() => {
+  const cargar = useCallback(() => {
     api
       .get('/pedidos/mios')
       .then((d) => setPedidos(d.pedidos))
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
   }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   if (cargando) return <Cargando texto="Buscando tus pedidos..." />;
   if (error) return <ErrorCarga mensaje={error} />;
@@ -253,6 +338,7 @@ export const MisPedidos = () => {
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-sm ${ESTADO[p.estado].clase}`}>
                   {ESTADO[p.estado].label}
                 </span>
+                <EtiquetaPago estado={p.estadoPago} />
               </div>
 
               <div className="font-black text-stone-900">{p.taller.nombre}</div>
@@ -287,10 +373,26 @@ export const MisPedidos = () => {
               </div>
             </div>
 
-            <div className="text-right shrink-0">
+            <div className="text-right shrink-0 flex flex-col items-end gap-2">
               <div className="text-xl font-black tabular-nums">{bs(p.total)}</div>
-              {p.estado === 'NUEVO' && (
-                <div className="flex items-center gap-1 text-[11px] text-stone-500 mt-1 justify-end">
+
+              {['PENDIENTE', 'RECHAZADO'].includes(p.estadoPago) && p.estado !== 'CANCELADO' && (
+                <button
+                  onClick={() => setPagando(p.id)}
+                  className="flex items-center gap-1.5 bg-orange-500 text-stone-950 px-3 py-2 text-xs font-black rounded-sm hover:bg-orange-400"
+                >
+                  <QrCode size={13} /> PAGAR
+                </button>
+              )}
+
+              {p.estadoPago === 'COMPROBANTE_SUBIDO' && (
+                <div className="flex items-center gap-1 text-[11px] text-blue-700">
+                  <Clock size={11} /> Revisando tu pago
+                </div>
+              )}
+
+              {p.estado === 'NUEVO' && p.estadoPago === 'CONFIRMADO' && (
+                <div className="flex items-center gap-1 text-[11px] text-stone-500">
                   <Clock size={11} /> Esperando al taller
                 </div>
               )}
@@ -298,6 +400,13 @@ export const MisPedidos = () => {
           </div>
         </div>
       ))}
+
+      <ModalPago
+        pedidoId={pagando}
+        open={!!pagando}
+        onClose={() => setPagando(null)}
+        onPagado={cargar}
+      />
     </div>
   );
 };

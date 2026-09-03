@@ -14,6 +14,7 @@ import { autenticar } from '../middleware/auth.js';
 import { conTaller, exigirTaller, scope, bloquearAyudante } from '../middleware/tenancy.js';
 import { validar } from './materiales.js';
 import { valorizarReceta, margenBrutoPct } from 'shared/costeo';
+import { guardarEstampado } from '../services/imagenes.js';
 
 export const rutasProductos = Router();
 
@@ -196,6 +197,30 @@ rutasProductos.put('/:id/receta', bloquearAyudante, async (req, res) => {
       cantidad: Number(r.cantidad),
       precioUnitario: Number(r.material.precioUnitario),
     })),
+  });
+});
+
+// ── PUT /:id/foto ────────────────────────────────────────────
+// Hasta ahora el catalogo mostraba emojis. Una foto real de la
+// prenda vende mucho mas que un dibujo generico.
+
+rutasProductos.put('/:id/foto', bloquearAyudante, async (req, res) => {
+  const producto = await prisma.producto.findFirst({
+    where: { id: req.params.id, ...scope(req) },
+  });
+  if (!producto) throw errores.noEncontrado('El producto');
+
+  const url = await guardarEstampado(req.body?.foto);
+
+  const actualizado = await prisma.producto.update({
+    where: { id: producto.id },
+    data: { imagenUrl: url },
+    select: { id: true, nombre: true, imagenUrl: true },
+  });
+
+  res.json({
+    ...actualizado,
+    mensaje: url ? 'Foto cargada.' : 'Se quitó la foto.',
   });
 });
 
