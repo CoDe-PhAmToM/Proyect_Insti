@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Plataforma de Gestion Financiera para la Rentabilidad en Microempresas de Confeccion Informal - Distrito 6, El Alto",
-  "workspaces": ["shared", "client", "server"],
+  "workspaces": [
+    "shared",
+    "client",
+    "server"
+  ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:web": "npm run dev --workspace=client",
@@ -14,10 +18,13 @@
     "db:migrate": "npm run db:migrate --workspace=server",
     "db:seed": "npm run db:seed --workspace=server",
     "db:studio": "npm run db:studio --workspace=server",
-    "db:reset": "npm run db:reset --workspace=server"
+    "db:reset": "npm run db:reset --workspace=server",
+    "db:demo": "npm run db:demo --workspace=server"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
-  "engines": { "node": ">=20.11.0" }
+  "engines": {
+    "node": ">=20.11.0"
+  }
 }

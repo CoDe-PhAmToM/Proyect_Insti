@@ -13,7 +13,8 @@
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:demo": "node prisma/demo.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

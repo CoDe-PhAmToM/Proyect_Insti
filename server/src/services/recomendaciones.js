@@ -324,8 +324,13 @@ const pronosticoDemanda = (productos, registros) => {
     salida.push({
       tipo: 'PRONOSTICO',
       severidad: 'INFO',
-      titulo:
-        pron.tendencia.direccion === 'sube'
+      // El titulo solo afirma una direccion si la tendencia es
+      // confiable. Antes decia "vienen subiendo" y el mensaje de
+      // abajo decia "varian demasiado para marcar una tendencia":
+      // la pantalla se contradecia a si misma.
+      titulo: !pron.tendencia.confiable
+        ? `${p.nombre}: ventas irregulares`
+        : pron.tendencia.direccion === 'sube'
           ? `${p.nombre}: las ventas vienen subiendo`
           : pron.tendencia.direccion === 'baja'
             ? `${p.nombre}: las ventas vienen bajando`

@@ -28,6 +28,7 @@ import { Catalogo, Personalizador } from './views/CatalogoPersonalizar';
 import { Login }                    from './views/Login';
 import { NAV_ITEMS, vistaInicial, puedeVer } from './data/navigation';
 import { LimiteError }              from './components/LimiteError';
+import { AvisoProvider }            from './components/Aviso';
 
 import { AuthProvider, useAuth }    from './context/AuthContext';
 import { MaterialesProvider }       from './context/MaterialesContext';
@@ -93,7 +94,7 @@ const AppConSesion = () => {
 
         <div className="flex-1 overflow-y-auto">
           <LimiteError clave={vista} nombre={vista}>
-          {vista === 'dashboard'    && <Dashboard />}
+          {vista === 'dashboard'    && <Dashboard onIr={setVista} />}
           {vista === 'registros'    && <Registros />}
           {vista === 'materiales'   && <Materiales />}
           {vista === 'ordenes'      && <Ordenes />}
@@ -121,6 +122,7 @@ const Enrutador = () => {
   if (!usuario) return <Login />;
 
   return (
+    <AvisoProvider>
     <MaterialesProvider>
       <RegistrosProvider>
         <OrdenesProvider>
@@ -130,6 +132,7 @@ const Enrutador = () => {
         </OrdenesProvider>
       </RegistrosProvider>
     </MaterialesProvider>
+    </AvisoProvider>
   );
 };
 

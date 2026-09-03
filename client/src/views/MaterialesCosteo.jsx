@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Modal, FormField, inputClass } from '../components/Modal';
 import { BotonPlantillas } from '../components/Plantillas';
+import { useAviso } from '../components/Aviso';
 import { Cargando, ErrorCarga, SinDatos } from '../components/Layout';
 import { useMateriales } from '../context/MaterialesContext';
 import { useOrdenes } from '../context/OrdenesContext';
@@ -44,6 +45,7 @@ export const Materiales = () => {
     agregarMaterial, editarMaterial, eliminarMaterial, moverStock, verKardex,
   } = useMateriales();
   const { puedeVerCostos } = useAuth();
+  const { mostrar } = useAviso();
 
   const [modalForm, setModalForm] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -213,6 +215,7 @@ export const Materiales = () => {
         onGuardar={async (datos) => {
           if (editando) await editarMaterial(editando.id, datos);
           else await agregarMaterial(datos);
+          mostrar(editando ? `${datos.nombre} actualizado` : `${datos.nombre} agregado a tu inventario`);
           setModalForm(false);
         }}
       />
@@ -221,7 +224,8 @@ export const Materiales = () => {
         material={moviendo}
         onClose={() => setMoviendo(null)}
         onMover={async (mov) => {
-          await moverStock(moviendo.id, mov);
+          const r = await moverStock(moviendo.id, mov);
+          mostrar(`${moviendo.nombre}: ahora tenés ${r.material.stock} ${moviendo.unidad}`);
           setMoviendo(null);
         }}
       />

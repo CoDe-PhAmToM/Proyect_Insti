@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { bs, fechaCorta, hoyISO } from 'shared/formato';
 import { cronometrar } from '../lib/bitacora';
 import { FiltroPeriodo } from '../components/FiltroPeriodo';
+import { useAviso } from '../components/Aviso';
 
 const TIPOS = [
   { id: 'INGRESO', label: 'Entró plata', ayuda: 'Una venta, un pedido cobrado', color: 'green' },
@@ -50,6 +51,7 @@ export const Registros = () => {
   } = useRegistros();
   const { productos } = useMateriales();
   const { puedeVerCostos } = useAuth();
+  const { mostrar } = useAviso();
 
   const [filtro, setFiltro] = useState('todos');
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -127,6 +129,13 @@ export const Registros = () => {
         cantidad: form.cantidad ? Number(form.cantidad) : null,
         precioUnitario: form.precioUnitario ? Number(form.precioUnitario) : null,
       });
+      mostrar(
+        form.tipo === 'INGRESO'
+          ? `Anotaste ${bs(Number(form.monto))} que entró`
+          : form.tipo === 'RETIRO'
+            ? `Anotaste ${bs(Number(form.monto))} que sacaste`
+            : `Anotaste ${bs(Number(form.monto))} que salió`
+      );
       relojRef.current?.fin('registro_creado', {
         entidad: 'registro',
         metadata: {
@@ -509,6 +518,7 @@ export const Registros = () => {
             <button
               onClick={async () => {
                 await anularRegistro(aAnular.id, motivoAnular);
+                mostrar('Movimiento anulado. Quedó el registro de por qué.', 'info');
                 setAAnular(null);
               }}
               disabled={motivoAnular.trim().length < 3}

@@ -13,14 +13,24 @@ import {
 import { bs, fechaCorta } from 'shared/formato';
 import { useRegistros } from '../context/RegistrosContext';
 import { api } from '../lib/api';
+import { PrimerosPasos, Comparacion } from '../components/PrimerosPasos';
 
-export const Dashboard = () => {
+export const Dashboard = ({ onIr }) => {
   const {
     registros, ingresos, egresos, mezclaPersonal,
     gananciaReal, gananciaSinMezcla,
   } = useRegistros();
 
   const [desgloseAbierto, setDesgloseAbierto] = useState(false);
+  const [resumen, setResumen] = useState(null);
+
+  useEffect(() => {
+    let vivo = true;
+    api.get('/indicadores/resumen')
+      .then((d) => { if (vivo) setResumen(d); })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, [registros]);
 
   // Serie real de los ultimos 7 dias, armada desde los registros de
   // la base. Antes era un arreglo fijo: numeros reales al lado de un
@@ -52,6 +62,12 @@ export const Dashboard = () => {
   return (
     <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
 
+      {/* Lo primero que ve alguien que recién entra */}
+      <PrimerosPasos configuracion={resumen?.configuracion} onIr={onIr} />
+
+      {/* "¿Me está yendo bien?" — la pregunta que se hace de verdad */}
+      <Comparacion resumen={resumen} bs={bs} />
+
       {/* Alerta de mezcla personal/negocio — ahora con el número real */}
       {mezclaPersonal > 0 && (
         <div className="bg-amber-50 border border-amber-300 rounded-sm p-4 flex items-start gap-3">
@@ -59,7 +75,7 @@ export const Dashboard = () => {
           <div>
             <div className="text-sm font-black text-amber-900 mb-0.5">Gastos personales mezclados con el negocio</div>
             <div className="text-xs text-amber-800">
-              Se detectaron <strong>Bs. {mezclaPersonal.toFixed(2)}</strong> en gastos personales registrados desde la caja del negocio.
+              Se detectaron <strong>{bs(mezclaPersonal)}</strong> en gastos personales registrados desde la caja del negocio.
               Esto reduce tu ganancia real en el mismo monto.{' '}
               <button onClick={() => setDesgloseAbierto(true)} className="underline font-bold">Ver el cálculo →</button>
             </div>
@@ -73,7 +89,7 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <TrendingUp size={16} className="text-green-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {ingresos.toFixed(2)}</div>
+          <div className="text-2xl font-black text-stone-900 mb-1">{bs(ingresos)}</div>
           <div className="text-[11px] text-stone-500 uppercase tracking-wider">Ingresos registrados</div>
         </div>
 
@@ -81,7 +97,7 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <TrendingDown size={16} className="text-red-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900 mb-1">Bs. {egresos.toFixed(2)}</div>
+          <div className="text-2xl font-black text-stone-900 mb-1">{bs(egresos)}</div>
           <div className="text-[11px] text-stone-500 uppercase tracking-wider">Egresos registrados</div>
         </div>
 
@@ -97,7 +113,7 @@ export const Dashboard = () => {
             {desgloseAbierto ? <ChevronUp size={14} className="text-stone-400" /> : <ChevronDown size={14} className="text-stone-400" />}
           </div>
           <div className={`text-2xl font-black mb-1 ${desgloseAbierto ? 'text-orange-400' : 'text-stone-900'} ${gananciaReal < 0 && !desgloseAbierto ? 'text-red-700' : ''}`}>
-            Bs. {gananciaReal.toFixed(2)}
+            {bs(gananciaReal)}
           </div>
           <div className={`text-[11px] uppercase tracking-wider ${desgloseAbierto ? 'text-stone-400' : 'text-stone-500'}`}>
             Ganancia real · tocá para ver el cálculo
@@ -108,7 +124,7 @@ export const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <Users size={16} className={mezclaPersonal > 0 ? 'text-amber-600' : 'text-stone-400'} />
           </div>
-          <div className={`text-2xl font-black mb-1 ${mezclaPersonal > 0 ? 'text-amber-800' : 'text-stone-900'}`}>Bs. {mezclaPersonal.toFixed(2)}</div>
+          <div className={`text-2xl font-black mb-1 ${mezclaPersonal > 0 ? 'text-amber-800' : 'text-stone-900'}`}>{bs(mezclaPersonal)}</div>
           <div className="text-[11px] text-stone-500 uppercase tracking-wider">Gastos personales mezclados</div>
         </div>
       </div>
@@ -129,26 +145,26 @@ export const Dashboard = () => {
           <div className="space-y-0">
             <div className="flex justify-between items-center py-3 border-b border-stone-800">
               <span className="text-sm text-stone-300">Total de ingresos registrados</span>
-              <span className="font-bold text-green-400">+ Bs. {ingresos.toFixed(2)}</span>
+              <span className="font-bold text-green-400">+ {bs(ingresos)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-stone-800">
               <span className="text-sm text-stone-300">Total de egresos registrados</span>
-              <span className="font-bold text-red-400">− Bs. {egresos.toFixed(2)}</span>
+              <span className="font-bold text-red-400">− {bs(egresos)}</span>
             </div>
             <div className="flex justify-between items-center py-3 border-b border-stone-800 pl-4">
               <span className="text-xs text-amber-400">↳ de los cuales, gastos personales mezclados</span>
-              <span className="text-xs text-amber-400">Bs. {mezclaPersonal.toFixed(2)}</span>
+              <span className="text-xs text-amber-400">{bs(mezclaPersonal)}</span>
             </div>
             <div className="flex justify-between items-center py-4 border-b-2 border-stone-700">
               <span className="text-sm font-bold">= Ganancia real (con gastos mezclados incluidos)</span>
-              <span className="text-xl font-black text-orange-400">Bs. {gananciaReal.toFixed(2)}</span>
+              <span className="text-xl font-black text-orange-400">{bs(gananciaReal)}</span>
             </div>
             <div className="flex justify-between items-center py-4 bg-green-950/40 -mx-6 px-6 mt-2 rounded-sm">
               <div>
                 <div className="text-sm font-bold text-green-300">Ganancia real solo del negocio</div>
                 <div className="text-[11px] text-green-500/80">si sacás los gastos personales de la cuenta</div>
               </div>
-              <span className="text-2xl font-black text-green-400">Bs. {gananciaSinMezcla.toFixed(2)}</span>
+              <span className="text-2xl font-black text-green-400">{bs(gananciaSinMezcla)}</span>
             </div>
           </div>
 
@@ -191,9 +207,11 @@ export const Dashboard = () => {
                       className="w-full bg-orange-500 hover:bg-orange-600 transition-colors rounded-t-sm relative group"
                       style={{ height: `${(v.ingreso / maxIngreso) * 100}%` }}
                     >
-                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[11px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
-                        Bs. {v.ingreso}
-                      </div>
+                      {v.ingreso > 0 && (
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-stone-600 whitespace-nowrap tabular-nums">
+                          {Math.round(v.ingreso)}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex-1 flex items-end">
@@ -201,9 +219,11 @@ export const Dashboard = () => {
                       className="w-full bg-stone-300 hover:bg-stone-400 transition-colors rounded-t-sm relative group"
                       style={{ height: `${(v.egreso / maxIngreso) * 100}%` }}
                     >
-                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[11px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
-                        Bs. {v.egreso}
-                      </div>
+                      {v.egreso > 0 && (
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-stone-400 whitespace-nowrap tabular-nums">
+                          {Math.round(v.egreso)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

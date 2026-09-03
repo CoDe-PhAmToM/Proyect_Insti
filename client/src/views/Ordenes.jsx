@@ -18,6 +18,7 @@ import { useOrdenes } from '../context/OrdenesContext';
 import { useMateriales } from '../context/MaterialesContext';
 import { useAuth } from '../context/AuthContext';
 import { bs, fechaCorta, hoyISO } from 'shared/formato';
+import { useAviso } from '../components/Aviso';
 
 const ESTADO = {
   BORRADOR:   { label: 'Borrador',    clase: 'bg-stone-100 text-stone-700' },
@@ -32,6 +33,7 @@ export const Ordenes = () => {
     useOrdenes();
   const { productos } = useMateriales();
   const { puedeVerCostos } = useAuth();
+  const { mostrar } = useAviso();
 
   const [modalNueva, setModalNueva] = useState(false);
   const [detalleDe, setDetalleDe] = useState(null);
@@ -44,6 +46,15 @@ export const Ordenes = () => {
     setErrorAccion(null);
     try {
       await cambiarEstado(id, estado, cantidad);
+      mostrar(
+        {
+          EN_PROCESO: 'Orden arrancada. Se descontó el material del inventario.',
+          TERMINADA: 'Orden terminada. Ya podés ver cuánto costó cada prenda.',
+          ENTREGADA: 'Orden entregada.',
+          CANCELADA: 'Orden cancelada. El material volvió al inventario.',
+        }[estado] ?? 'Listo',
+        estado === 'CANCELADA' ? 'info' : 'ok'
+      );
       setTerminando(null);
     } catch (e) {
       setErrorAccion(e.message);

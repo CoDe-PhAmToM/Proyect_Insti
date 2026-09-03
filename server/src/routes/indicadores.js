@@ -17,6 +17,7 @@ import { prisma } from '../lib/prisma.js';
 import { autenticar } from '../middleware/auth.js';
 import { conTaller, exigirTaller, scope, bloquearAyudante } from '../middleware/tenancy.js';
 import {
+  resultadoPeriodo,
   puntoEquilibrio,
   margenContribucion,
   margenBrutoPct,
@@ -126,6 +127,116 @@ rutasIndicadores.get('/punto-equilibrio', async (req, res) => {
       totalFijos === 0
         ? 'Todavía no cargaste los gastos fijos del taller (alquiler, luz, agua). Sin eso no se puede calcular cuánto tenés que vender para no perder.'
         : null,
+  });
+});
+
+// ── GET /resumen ─────────────────────────────────────────────
+//
+// El panel mostraba ingresos, egresos y ganancia. Pero la pregunta
+// que se hace la microempresaria no es "cuanto gane": es
+// "me esta yendo bien?". Y eso solo se responde comparando.
+//
+// Devuelve tambien el estado de configuracion, para saber que le
+// falta cargar a un taller que recien empieza.
+
+rutasIndicadores.get('/resumen', async (req, res) => {
+  const ahora = new Date();
+  const esteMes = {
+    inicio: new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 1)),
+    fin: new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() + 1, 0, 23, 59, 59)),
+  };
+  const mesPasado = {
+    inicio: new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth() - 1, 1)),
+    fin: new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 0, 23, 59, 59)),
+  };
+
+  const traer = async (rango) => {
+    const regs = await prisma.registro.findMany({
+      where: {
+        ...scope(req),
+        esLineaBase: false,
+        anuladoEn: null,
+        fecha: { gte: rango.inicio, lte: rango.fin },
+      },
+      select: { tipo: true, monto: true, origen: true, cantidad: true },
+    });
+    const lista = regs.map((r) => ({ ...r, monto: dec(r.monto) }));
+    return {
+      ...resultadoPeriodo(lista),
+      movimientos: lista.length,
+      unidadesVendidas: lista
+        .filter((r) => r.tipo === 'INGRESO')
+        .reduce((a, r) => a + dec(r.cantidad), 0),
+    };
+  };
+
+  const [actual, previo, materiales, productos, conReceta, fijos, ordenes] = await Promise.all([
+    traer(esteMes),
+    traer(mesPasado),
+    prisma.material.count({ where: { ...scope(req), activo: true } }),
+    prisma.producto.count({ where: { ...scope(req), activo: true } }),
+    prisma.producto.count({ where: { ...scope(req), activo: true, receta: { some: {} } } }),
+    prisma.costoFijo.count({ where: scope(req) }),
+    prisma.ordenProduccion.count({ where: scope(req) }),
+  ]);
+
+  const dif = red(actual.gananciaReal - previo.gananciaReal);
+  const variacion =
+    previo.gananciaReal !== 0
+      ? red(((actual.gananciaReal - previo.gananciaReal) / Math.abs(previo.gananciaReal)) * 100)
+      : null;
+
+  // Que le falta al taller para tener el sistema completo. El orden
+  // importa: sin materiales no hay receta, sin receta no hay costo.
+  const pasos = [
+    {
+      id: 'materiales',
+      titulo: 'Cargá tus materiales',
+      texto: 'La tela, los hilos y los avíos que usás, con su precio.',
+      hecho: materiales > 0,
+      vista: 'materiales',
+    },
+    {
+      id: 'producto',
+      titulo: 'Cargá una prenda con su receta',
+      texto: 'Cuánta tela y cuánto hilo lleva. Sin eso no se puede saber cuánto te cuesta.',
+      hecho: conReceta > 0,
+      vista: 'costeo',
+    },
+    {
+      id: 'fijos',
+      titulo: 'Cargá tus gastos fijos',
+      texto: 'Alquiler, luz y agua del mes. Habilitan el punto de equilibrio.',
+      hecho: fijos > 0,
+      vista: 'costeo',
+    },
+    {
+      id: 'movimiento',
+      titulo: 'Anotá tu primer movimiento',
+      texto: 'Una venta o una compra. Con eso el sistema ya empieza a calcular.',
+      hecho: actual.movimientos + previo.movimientos > 0,
+      vista: 'registros',
+    },
+  ];
+
+  res.json({
+    esteMes: actual,
+    mesPasado: previo,
+    comparacion: {
+      diferencia: dif,
+      variacionPct: variacion,
+      mejoro: dif > 0,
+      hayConQueComparar: previo.movimientos > 0,
+    },
+    configuracion: {
+      pasos,
+      completos: pasos.filter((p) => p.hecho).length,
+      total: pasos.length,
+      listo: pasos.every((p) => p.hecho),
+      materiales,
+      productos,
+      ordenes,
+    },
   });
 });
 
