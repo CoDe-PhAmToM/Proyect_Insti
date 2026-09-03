@@ -55,7 +55,7 @@ export const Login = () => {
             <div className="font-black text-lg leading-tight tracking-tight text-stone-100">
               GESTIÓN FINANCIERA
             </div>
-            <div className="text-[10px] text-stone-500 tracking-[0.15em] uppercase mt-0.5">
+            <div className="text-[11px] text-stone-500 tracking-[0.15em] uppercase mt-0.5">
               Confección · El Alto
             </div>
           </div>

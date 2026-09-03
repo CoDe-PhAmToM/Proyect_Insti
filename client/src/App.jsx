@@ -52,6 +52,7 @@ const AppConSesion = () => {
 
   const rolVista = esCliente ? 'cliente' : 'productor';
   const [vista, setVista] = useState(vistaInicial(rolVista));
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const config = NAV_ITEMS.find((i) => i.id === vista);
   const sinTopBar = vista === 'personalizar';
@@ -67,10 +68,18 @@ const AppConSesion = () => {
         usuario={usuario}
         rol={rolVista}
         onSalir={salir}
+        abierto={menuAbierto}
+        onCerrar={() => setMenuAbierto(false)}
       />
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {!sinTopBar && config && <TopBar titulo={config.titulo} subtitulo={config.subtitulo} />}
+        {!sinTopBar && config && (
+          <TopBar
+            titulo={config.titulo}
+            subtitulo={config.subtitulo}
+            onAbrirMenu={() => setMenuAbierto(true)}
+          />
+        )}
 
         <div className="flex-1 overflow-y-auto">
           {vista === 'dashboard'    && <Dashboard />}

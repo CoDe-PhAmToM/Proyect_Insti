@@ -64,7 +64,7 @@ export const Catalogo = ({ setVista }) => {
     filtro === 'todas' ? datos.productos : datos.productos.filter((p) => p.categoria === filtro);
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       <div className="flex flex-wrap gap-3 justify-between items-center">
         <div className="flex gap-1.5 flex-wrap">
           <Chip activo={filtro === 'todas'} onClick={() => setFiltro('todas')}>
@@ -83,7 +83,7 @@ export const Catalogo = ({ setVista }) => {
         >
           <ShoppingBag size={14} /> MI CARRITO
           {items.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-orange-500 text-stone-950 text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="absolute -top-2 -right-2 bg-orange-500 text-stone-950 text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center">
               {items.length}
             </span>
           )}
@@ -109,7 +109,7 @@ export const Catalogo = ({ setVista }) => {
 
               <div className="p-5 flex-1 flex flex-col gap-3">
                 <div className="flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-stone-400 mb-1">
+                  <div className="text-[11px] uppercase tracking-wider text-stone-400 mb-1">
                     {p.taller.nombre}
                   </div>
                   <h3 className="font-black text-stone-900 leading-snug">{p.nombre}</h3>
@@ -255,7 +255,7 @@ export const Personalizador = () => {
       <div className="lg:col-span-7 bg-stone-100 relative flex flex-col items-center justify-center overflow-hidden min-h-[26rem]">
         <div className="absolute top-0 left-0 right-0 px-6 py-4 flex justify-between items-center bg-stone-100/80 backdrop-blur-sm z-10 border-b border-stone-200">
           <div className="min-w-0">
-            <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500">Editor 2D</div>
+            <div className="text-[11px] tracking-[0.25em] uppercase text-stone-500">Editor 2D</div>
             <h2 className="text-lg font-black tracking-tight truncate">{producto.nombre}</h2>
           </div>
           <button
@@ -264,7 +264,7 @@ export const Personalizador = () => {
           >
             <ShoppingBag size={12} /> CARRITO
             {items.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-stone-950 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-stone-950 text-[11px] font-black w-4 h-4 rounded-full flex items-center justify-center">
                 {items.length}
               </span>
             )}

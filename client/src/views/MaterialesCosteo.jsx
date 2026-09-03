@@ -55,7 +55,7 @@ export const Materiales = () => {
   if (error) return <ErrorCarga mensaje={error} onReintentar={recargar} />;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       {aviso && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-sm p-4 flex items-start gap-3 text-sm">
           <div className="flex-1 text-blue-900">{aviso}</div>
@@ -660,7 +660,7 @@ export const Costeo = () => {
   const margenActual = detalle ? margenBrutoPct(detalle.precioVenta, costoTotal) : 0;
 
   return (
-    <div className="p-8 space-y-5">
+    <div className="p-4 sm:p-8 space-y-5">
       <div className="flex items-center gap-2 flex-wrap">
         {productos.map((p) => (
           <button

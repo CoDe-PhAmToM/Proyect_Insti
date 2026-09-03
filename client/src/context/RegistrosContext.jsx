@@ -11,6 +11,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
+import { encolar, avisarCola } from '../lib/conexion';
 import { useAuth } from './AuthContext';
 
 const RegistrosContext = createContext(null);
@@ -63,6 +64,15 @@ export const RegistrosProvider = ({ children }) => {
 
   const agregarRegistro = useCallback(
     async (datos) => {
+      // Sin señal, el movimiento se guarda en el celular y se manda
+      // solo al reconectar. Perder lo anotado es la forma mas rapida
+      // de que alguien abandone la app.
+      if (!navigator.onLine) {
+        await encolar({ ruta: '/registros', cuerpo: datos });
+        avisarCola();
+        return { encolado: true };
+      }
+
       const r = await api.post('/registros', datos);
       // Se recarga en vez de insertar a mano: los totales y las
       // alertas los decide el servidor, no el navegador.

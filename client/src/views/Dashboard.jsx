@@ -50,7 +50,7 @@ export const Dashboard = () => {
   const ultimosRegistros = registros.slice(0, 5);
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
 
       {/* Alerta de mezcla personal/negocio — ahora con el número real */}
       {mezclaPersonal > 0 && (
@@ -68,13 +68,13 @@ export const Dashboard = () => {
       )}
 
       {/* KPIs — todos calculados en vivo desde el mismo context */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white border border-stone-200 p-5 rounded-sm hover:border-stone-400 transition-colors">
           <div className="flex items-center justify-between mb-4">
             <TrendingUp size={16} className="text-green-600" />
           </div>
           <div className="text-2xl font-black text-stone-900 mb-1">Bs. {ingresos.toFixed(2)}</div>
-          <div className="text-[10px] text-stone-500 uppercase tracking-wider">Ingresos registrados</div>
+          <div className="text-[11px] text-stone-500 uppercase tracking-wider">Ingresos registrados</div>
         </div>
 
         <div className="bg-white border border-stone-200 p-5 rounded-sm hover:border-stone-400 transition-colors">
@@ -82,7 +82,7 @@ export const Dashboard = () => {
             <TrendingDown size={16} className="text-red-600" />
           </div>
           <div className="text-2xl font-black text-stone-900 mb-1">Bs. {egresos.toFixed(2)}</div>
-          <div className="text-[10px] text-stone-500 uppercase tracking-wider">Egresos registrados</div>
+          <div className="text-[11px] text-stone-500 uppercase tracking-wider">Egresos registrados</div>
         </div>
 
         {/* Ganancia real — clickeable, dispara el desglose */}
@@ -99,7 +99,7 @@ export const Dashboard = () => {
           <div className={`text-2xl font-black mb-1 ${desgloseAbierto ? 'text-orange-400' : 'text-stone-900'} ${gananciaReal < 0 && !desgloseAbierto ? 'text-red-700' : ''}`}>
             Bs. {gananciaReal.toFixed(2)}
           </div>
-          <div className={`text-[10px] uppercase tracking-wider ${desgloseAbierto ? 'text-stone-400' : 'text-stone-500'}`}>
+          <div className={`text-[11px] uppercase tracking-wider ${desgloseAbierto ? 'text-stone-400' : 'text-stone-500'}`}>
             Ganancia real · tocá para ver el cálculo
           </div>
         </button>
@@ -109,7 +109,7 @@ export const Dashboard = () => {
             <Users size={16} className={mezclaPersonal > 0 ? 'text-amber-600' : 'text-stone-400'} />
           </div>
           <div className={`text-2xl font-black mb-1 ${mezclaPersonal > 0 ? 'text-amber-800' : 'text-stone-900'}`}>Bs. {mezclaPersonal.toFixed(2)}</div>
-          <div className="text-[10px] text-stone-500 uppercase tracking-wider">Gastos personales mezclados</div>
+          <div className="text-[11px] text-stone-500 uppercase tracking-wider">Gastos personales mezclados</div>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export const Dashboard = () => {
         <div className="bg-stone-950 text-white rounded-sm p-6 -mt-2">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <div className="text-[10px] tracking-[0.25em] uppercase text-orange-400 mb-1">Cómo se calculó</div>
+              <div className="text-[11px] tracking-[0.25em] uppercase text-orange-400 mb-1">Cómo se calculó</div>
               <h3 className="text-lg font-black">Tu ganancia, paso a paso</h3>
             </div>
             <button onClick={() => setDesgloseAbierto(false)} className="text-stone-500 hover:text-white">
@@ -159,12 +159,12 @@ export const Dashboard = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Gráfico de los últimos 7 días, con los movimientos reales */}
-        <div className="col-span-2 bg-white border border-stone-200 p-6 rounded-sm">
+        <div className="lg:col-span-2 bg-white border border-stone-200 p-4 sm:p-6 rounded-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 mb-1">Últimos 7 días</div>
+              <div className="text-[11px] tracking-[0.25em] uppercase text-stone-500 mb-1">Últimos 7 días</div>
               <h2 className="text-xl font-black tracking-tight">Lo que entró y lo que salió</h2>
             </div>
             <div className="flex items-center gap-4 text-xs">
@@ -191,7 +191,7 @@ export const Dashboard = () => {
                       className="w-full bg-orange-500 hover:bg-orange-600 transition-colors rounded-t-sm relative group"
                       style={{ height: `${(v.ingreso / maxIngreso) * 100}%` }}
                     >
-                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[10px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
+                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[11px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
                         Bs. {v.ingreso}
                       </div>
                     </div>
@@ -201,13 +201,13 @@ export const Dashboard = () => {
                       className="w-full bg-stone-300 hover:bg-stone-400 transition-colors rounded-t-sm relative group"
                       style={{ height: `${(v.egreso / maxIngreso) * 100}%` }}
                     >
-                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[10px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
+                      <div className="opacity-0 group-hover:opacity-100 absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[11px] px-1.5 py-0.5 rounded-sm whitespace-nowrap z-10">
                         Bs. {v.egreso}
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="text-[10px] font-semibold text-stone-500">{v.dia}</div>
+                <div className="text-[11px] font-semibold text-stone-500">{v.dia}</div>
               </div>
             ))}
           </div>
@@ -222,14 +222,14 @@ export const Dashboard = () => {
       <div className="bg-white border border-stone-200 rounded-sm overflow-hidden">
         <div className="p-5 border-b border-stone-200 flex justify-between items-center">
           <div>
-            <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 mb-1">Movimientos recientes</div>
+            <div className="text-[11px] tracking-[0.25em] uppercase text-stone-500 mb-1">Movimientos recientes</div>
             <h2 className="text-lg font-black tracking-tight">Últimos registros</h2>
           </div>
           <span className="text-xs text-stone-400">{registros.length} en total</span>
         </div>
         <table className="w-full text-sm">
           <thead className="bg-stone-50">
-            <tr className="text-left text-[10px] tracking-[0.2em] uppercase text-stone-500">
+            <tr className="text-left text-[11px] tracking-[0.2em] uppercase text-stone-500">
               <th className="px-5 py-3 font-medium">Fecha</th>
               <th className="px-5 py-3 font-medium">Descripción</th>
               <th className="px-5 py-3 font-medium">Categoría</th>
@@ -244,12 +244,12 @@ export const Dashboard = () => {
                 <td className="px-5 py-3 font-medium text-sm">
                   {r.descripcion}
                   {r.origen === 'PERSONAL' && (
-                    <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-sm font-bold">PERSONAL</span>
+                    <span className="ml-2 text-[11px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-sm font-bold">PERSONAL</span>
                   )}
                 </td>
                 <td className="px-5 py-3 text-xs text-stone-500">{r.categoria?.nombre}</td>
                 <td className="px-5 py-3 text-center">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-sm ${
                     r.tipo === 'RETIRO' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
                   }`}>
                     {r.tipo === 'RETIRO' ? 'RETIRO' : r.origen}
@@ -289,7 +289,7 @@ const PanelUrgente = () => {
     <div className="bg-stone-950 text-stone-100 p-6 rounded-sm flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <Sparkles size={15} className="text-orange-400" />
-        <div className="text-[10px] tracking-[0.25em] uppercase text-orange-400">
+        <div className="text-[11px] tracking-[0.25em] uppercase text-orange-400">
           Lo más urgente
         </div>
       </div>

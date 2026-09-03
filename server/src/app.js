@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 
 import { env } from './lib/env.js';
 import { prisma } from './lib/prisma.js';
@@ -33,7 +34,28 @@ export const app = express();
 // veria una sola IP para todo el mundo.
 app.set('trust proxy', 1);
 
-app.use(helmet());
+app.use(
+  helmet({
+    // La API no sirve HTML, asi que la politica de contenido no
+    // aplica; el frontend vive en otro dominio.
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+// Freno general contra abuso. Es holgado a proposito: un taller
+// cargando movimientos hace decenas de peticiones por minuto, y
+// frenar a un usuario legitimo es peor que el abuso que evita.
+app.use(
+  '/api/',
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Demasiadas peticiones. Espera un momento.' },
+  })
+);
 app.use(compression());
 app.use(
   cors({

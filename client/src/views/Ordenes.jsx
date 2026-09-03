@@ -56,7 +56,7 @@ export const Ordenes = () => {
   if (error) return <ErrorCarga mensaje={error} onReintentar={recargar} />;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       {errorAccion && (
         <div className="bg-red-50 border-2 border-red-200 text-red-800 text-sm rounded-sm p-4">
           {errorAccion}

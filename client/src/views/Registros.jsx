@@ -144,7 +144,7 @@ export const Registros = () => {
   if (error) return <ErrorCarga mensaje={error} onReintentar={recargar} />;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       {/* Alerta de mezcla — el corazón del objetivo 4 */}
       {mezclaPersonal > 0 && (
         <div className="bg-amber-50 border-2 border-amber-300 rounded-sm p-4 flex items-start gap-3">

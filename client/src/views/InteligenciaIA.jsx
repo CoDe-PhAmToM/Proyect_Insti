@@ -71,9 +71,9 @@ export const InteligenciaIA = () => {
   const criticas = recomendaciones.filter((r) => r.severidad === 'CRITICA').length;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       {/* Encabezado: dice exactamente sobre qué datos trabajó */}
-      <div className="bg-gradient-to-br from-stone-950 via-stone-900 to-orange-950 text-white p-8 rounded-sm relative overflow-hidden">
+      <div className="bg-gradient-to-br from-stone-950 via-stone-900 to-orange-950 text-white p-5 sm:p-8 rounded-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
@@ -97,7 +97,7 @@ export const InteligenciaIA = () => {
             </button>
           </div>
 
-          <h2 className="text-3xl font-black tracking-tight max-w-xl leading-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight max-w-xl leading-tight mb-4">
             {sinDatos
               ? 'Todavía no hay datos para analizar.'
               : recomendaciones.length === 0
@@ -174,12 +174,12 @@ const Tarjeta = ({ r, onDescartar }) => {
           </div>
           <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">
             <span
-              className={`text-[10px] font-black px-2 py-0.5 rounded-sm ${sev.clase} uppercase tracking-wider`}
+              className={`text-[11px] font-black px-2 py-0.5 rounded-sm ${sev.clase} uppercase tracking-wider`}
             >
               {sev.label}
             </span>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${cfg.bg} ${cfg.texto} tracking-wider`}
+              className={`text-[11px] font-bold px-2 py-0.5 rounded-sm ${cfg.bg} ${cfg.texto} tracking-wider`}
             >
               {cfg.label}
             </span>
@@ -273,7 +273,7 @@ const Evidencia = ({ datos }) => {
       {/* La serie de ventas que alimentó el pronóstico */}
       {serie?.length > 0 && (
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-stone-400 mb-1.5">
+          <div className="text-[11px] uppercase tracking-wider text-stone-400 mb-1.5">
             Ventas mes a mes
           </div>
           <div className="flex items-end gap-1.5 h-16">
@@ -288,7 +288,7 @@ const Evidencia = ({ datos }) => {
                       title={`${s.unidades} unidades`}
                     />
                   </div>
-                  <div className="text-[9px] text-stone-400">{s.mes.slice(5)}</div>
+                  <div className="text-[11px] text-stone-400">{s.mes.slice(5)}</div>
                 </div>
               );
             })}
@@ -301,7 +301,7 @@ const Evidencia = ({ datos }) => {
 
 const Dato = ({ label, valor }) => (
   <div>
-    <div className="text-[10px] tracking-[0.2em] uppercase text-stone-500 mb-1">{label}</div>
+    <div className="text-[11px] tracking-[0.2em] uppercase text-stone-500 mb-1">{label}</div>
     <div className="font-bold">{valor}</div>
   </div>
 );

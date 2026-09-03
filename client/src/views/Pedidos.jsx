@@ -73,7 +73,7 @@ export const PedidosTaller = () => {
   const { pedidos, resumen } = datos;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
       {aviso && (
         <div className="bg-blue-50 border-2 border-blue-200 rounded-sm p-4 flex items-start gap-3 text-sm">
           <div className="flex-1 text-blue-900">{aviso}</div>
@@ -83,7 +83,7 @@ export const PedidosTaller = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Mini titulo="Nuevos" valor={resumen.nuevos} color="text-orange-700" />
         <Mini titulo="Haciéndose" valor={resumen.enProduccion} color="text-blue-700" />
         <Mini titulo="Total" valor={resumen.total} />
@@ -243,7 +243,7 @@ export const MisPedidos = () => {
   }
 
   return (
-    <div className="p-8 space-y-3">
+    <div className="p-4 sm:p-8 space-y-3">
       {pedidos.map((p) => (
         <div key={p.id} className="bg-white border border-stone-200 rounded-sm p-5">
           <div className="flex flex-wrap gap-4 justify-between items-start">

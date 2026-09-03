@@ -79,8 +79,8 @@ export const Reportes = () => {
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="bg-stone-950 text-white p-6 rounded-sm flex flex-wrap gap-4 justify-between items-start">
+    <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
+      <div className="bg-stone-950 text-white p-5 sm:p-6 rounded-sm flex flex-wrap gap-4 justify-between items-start">
         <div>
           <div className="text-[11px] tracking-[0.25em] uppercase text-orange-400 mb-1">
             Equipo de Contaduría
@@ -98,7 +98,7 @@ export const Reportes = () => {
             {CATEGORIAS.filter((c) => c.disponible && c.plantillas > 0).length}/
             {CATEGORIAS.filter((c) => c.plantillas > 0).length}
           </div>
-          <div className="text-[10px] text-stone-500 uppercase tracking-wider">
+          <div className="text-[11px] text-stone-500 uppercase tracking-wider">
             familias conectadas
           </div>
         </div>
@@ -492,7 +492,7 @@ const Costeo = ({ d }) => (
             <tr key={f.sku} className="border-b border-stone-50">
               <td className="py-2.5">
                 <div className="font-medium">{f.nombre}</div>
-                <div className="font-mono text-[10px] text-stone-400">{f.sku}</div>
+                <div className="font-mono text-[11px] text-stone-400">{f.sku}</div>
               </td>
               <td className="py-2.5 text-right text-stone-600 tabular-nums">
                 {bs(f.costoMateriales, { simbolo: false })}

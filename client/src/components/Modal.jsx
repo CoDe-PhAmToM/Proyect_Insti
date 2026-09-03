@@ -21,7 +21,7 @@ export const Modal = ({ open, onClose, title, subtitulo, children, wide }) => {
         <div className="flex items-start justify-between p-6 border-b border-stone-100 shrink-0">
           <div>
             {subtitulo && (
-              <div className="text-[10px] tracking-[0.25em] uppercase text-stone-500 mb-1">{subtitulo}</div>
+              <div className="text-[11px] tracking-[0.25em] uppercase text-stone-500 mb-1">{subtitulo}</div>
             )}
             <h3 className="text-xl font-black tracking-tight text-stone-900">{title}</h3>
           </div>
@@ -44,7 +44,7 @@ export const Modal = ({ open, onClose, title, subtitulo, children, wide }) => {
 // ── Elementos de formulario compartidos ─────────────────────
 export const FormField = ({ label, children }) => (
   <div>
-    <label className="block text-[10px] font-bold tracking-[0.15em] uppercase text-stone-500 mb-1.5">
+    <label className="block text-[11px] font-bold tracking-[0.15em] uppercase text-stone-500 mb-1.5">
       {label}
     </label>
     {children}
